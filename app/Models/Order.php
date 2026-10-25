@@ -26,7 +26,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id', 'business_id', 'driver_id', 'status', 'address', 'reference', 'lat', 'lng',
-        'subtotal', 'delivery_fee', 'coupon_code', 'discount', 'total', 'payment_method', 'cash_amount', 'transfer_proof', 'notes', 'cancel_reason', 'rating', 'rating_comment',
+        'subtotal', 'delivery_fee', 'service_fee', 'coupon_code', 'discount', 'commission', 'driver_earning', 'total', 'payment_method', 'cash_amount', 'transfer_proof', 'notes', 'cancel_reason', 'rating', 'rating_comment',
         'driver_lat', 'driver_lng', 'driver_location_at', 'delivered_at',
     ];
 
@@ -45,6 +45,9 @@ class Order extends Model
             'subtotal' => 'float',
             'delivery_fee' => 'float',
             'discount' => 'float',
+            'service_fee' => 'float',
+            'commission' => 'float',
+            'driver_earning' => 'float',
             'total' => 'float',
             'cash_amount' => 'float',
             'driver_lat' => 'float',

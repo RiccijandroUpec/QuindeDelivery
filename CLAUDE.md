@@ -24,7 +24,7 @@ App Flutter que la consume: `C:\Users\richa\StudioProjects\Delivery`.
 - `app/Filament/Widgets/` – métricas del dashboard; `app/Filament/Pages/Settlements.php` + `app/Filament/Settlements/` – liquidaciones (comisiones y ganancias)
 
 ## API
-- Públicas: `POST /register`, `POST /login` (throttle 10/min), `GET /categories`, `GET /businesses`, `GET /businesses/{id}`
+- Públicas: `GET /settings` (tarifa de servicio), `POST /register`, `POST /login` (throttle 10/min), `GET /categories`, `GET /businesses`, `GET /businesses/{id}`
 - Firmada: `GET /proofs/{order}` (comprobante privado, enlace de 30 min en `transfer_proof_url`)
 - `auth:sanctum`: `GET|PUT /me`, `POST /logout`
 - `role:cliente`: CRUD `/addresses`, `GET|POST /orders`, `GET /orders/{id}`, `POST /orders/{id}/cancel`,
@@ -41,7 +41,8 @@ App Flutter que la consume: `C:\Users\richa\StudioProjects\Delivery`.
 - El repartidor solo pasa a `en_camino` desde `listo`; antes de aceptar no ve nombre ni teléfono del cliente.
 - Horario: `Business::isOpenNow()` (pausa `is_open` + `opens_at`/`closes_at` en `America/Guayaquil`, admite cruzar medianoche). Se expone como `open_now`.
 - Cupones: `Coupon::rejectionFor()` valida, `discountFor()` calcula, `claimUse()` suma el uso de forma atómica.
-- Comisión: `businesses.commission_rate` (%) sobre el subtotal de pedidos entregados.
+- Dinero por pedido (se guarda al crearlo, cambiar tarifas no altera el historial): `service_fee` (Setting `service_fee`), `commission` (subtotal × `businesses.commission_rate`), `driver_earning` (envío × Setting `driver_share` %). Total = subtotal + envío + servicio − descuento.
+- Ganancia de la plataforma = comisión + servicio + (envío − driver_earning) − descuentos (`PlatformRevenue::totals`). Tarifas en Admin → Ventas → Tarifas (`app/Filament/Pages/PlatformSettings.php`, modelo `Setting` con caché).
 - Pago: efectivo (`cash_amount` para el vuelto) o transferencia (datos en `businesses.bank_info`, comprobante en `orders.transfer_proof`, disco public).
 - Calificación: `orders.rating` → `Business::refreshRating()` recalcula `rating` y `rating_count`.
 - Al cambiar la API, actualizar también `lib/api.dart` y `lib/models.dart` de la app.

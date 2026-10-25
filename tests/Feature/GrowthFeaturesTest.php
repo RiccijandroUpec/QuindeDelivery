@@ -55,7 +55,7 @@ class GrowthFeaturesTest extends TestCase
 
         $this->assertEquals('PRIMERA20', $order->coupon_code);
         $this->assertEquals(min($order->subtotal * .2, 5), $order->discount);
-        $this->assertEquals(round($order->subtotal + $order->delivery_fee - $order->discount, 2), $order->total);
+        $this->assertEquals(round($order->subtotal + $order->delivery_fee + $order->service_fee - $order->discount, 2), $order->total);
         $this->assertEquals(1, Coupon::where('code', 'PRIMERA20')->value('uses'));
 
         // Solo es para el primer pedido.

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Settlements\PlatformRevenue;
 use App\Models\Business;
 use App\Models\Order;
 use App\Models\User;
@@ -23,6 +24,9 @@ class DeliveryStats extends StatsOverviewWidget
                 ->description((clone $today)->where('status', 'entregado')->count().' entregados')
                 ->color('primary'),
             Stat::make('Ventas hoy', '$'.number_format((clone $today)->where('status', 'entregado')->sum('total'), 2))
+                ->color('success'),
+            Stat::make('Ganancia Colibrí hoy', '$'.number_format(PlatformRevenue::totals((clone $today)->where('status', 'entregado'))['net'], 2))
+                ->description('Comisiones, servicio y envíos')
                 ->color('success'),
             Stat::make('Pendientes', Order::where('status', 'pendiente')->count())
                 ->description('Esperando aceptación')

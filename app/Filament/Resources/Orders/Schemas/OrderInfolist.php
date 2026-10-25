@@ -54,7 +54,10 @@ class OrderInfolist
                         TextEntry::make('payment_method')->label('Método de pago')->badge(),
                         TextEntry::make('cash_amount')->label('Paga con')->money('USD')->placeholder('-'),
                         TextEntry::make('subtotal')->money('USD'),
-                        TextEntry::make('delivery_fee')->label('Envío')->money('USD'),
+                        TextEntry::make('delivery_fee')->label('Envío')->money('USD')
+                            ->helperText(fn (Order $record) => 'Repartidor $'.number_format($record->driver_earning, 2)),
+                        TextEntry::make('service_fee')->label('Tarifa de servicio')->money('USD'),
+                        TextEntry::make('commission')->label('Comisión del negocio')->money('USD'),
                         TextEntry::make('discount')->label('Descuento')->money('USD')
                             ->helperText(fn (Order $record) => $record->coupon_code ? "Cupón {$record->coupon_code}" : null)
                             ->visible(fn (Order $record) => $record->discount > 0),

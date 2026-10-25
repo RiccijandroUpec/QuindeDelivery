@@ -7,6 +7,7 @@ use App\Models\Business;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -93,12 +94,17 @@ class OrderController extends Controller
         }
         $discount = $coupon ? $coupon->discountFor($subtotal, $business->delivery_fee) : 0;
 
-        $total = round($subtotal + $business->delivery_fee - $discount, 2);
+        // Reparto del dinero según las tarifas vigentes (Admin → Ventas → Tarifas).
+        $serviceFee = round(Setting::float('service_fee'), 2);
+        $commission = round($subtotal * $business->commission_rate / 100, 2);
+        $driverEarning = round($business->delivery_fee * Setting::float('driver_share') / 100, 2);
+
+        $total = round($subtotal + $business->delivery_fee + $serviceFee - $discount, 2);
         if ($data['payment_method'] === 'efectivo' && isset($data['cash_amount']) && $data['cash_amount'] < $total) {
             throw ValidationException::withMessages(['cash_amount' => ['El monto en efectivo no cubre el total.']]);
         }
 
-        $order = DB::transaction(function () use ($request, $data, $business, $items, $subtotal, $total, $coupon, $discount) {
+        $order = DB::transaction(function () use ($request, $data, $business, $items, $subtotal, $total, $coupon, $discount, $serviceFee, $commission, $driverEarning) {
             $order = Order::create([
                 'user_id' => $request->user()->id,
                 'business_id' => $business->id,
@@ -109,8 +115,11 @@ class OrderController extends Controller
                 'lng' => $data['lng'],
                 'subtotal' => $subtotal,
                 'delivery_fee' => $business->delivery_fee,
+                'service_fee' => $serviceFee,
                 'coupon_code' => $coupon?->code,
                 'discount' => $discount,
+                'commission' => $commission,
+                'driver_earning' => $driverEarning,
                 'total' => $total,
                 'payment_method' => $data['payment_method'],
                 'cash_amount' => $data['cash_amount'] ?? null,

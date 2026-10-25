@@ -80,7 +80,7 @@ class DeliveryFlowTest extends TestCase
         $item = $order->items()->first();
 
         $this->assertEquals($item->product->price * 2, $item->subtotal);
-        $this->assertEquals($order->subtotal + $order->business->delivery_fee, $order->total);
+        $this->assertEquals($order->subtotal + $order->business->delivery_fee + $order->service_fee, $order->total);
     }
 
     public function test_driver_full_flow(): void

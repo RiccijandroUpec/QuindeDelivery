@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\DriverController;
 use App\Http\Controllers\Api\OrderController;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Route;
 
 // Límite de intentos para frenar ataques de fuerza bruta.
@@ -18,6 +19,7 @@ Route::middleware('throttle:10,1')->group(function () {
 // Comprobantes de transferencia: solo con enlace firmado (ver Order::getTransferProofUrlAttribute).
 Route::get('/proofs/{order}', [OrderController::class, 'showProof'])->middleware('signed')->name('orders.proof');
 
+Route::get('/settings', fn () => Setting::publicValues());
 Route::get('/categories', [CatalogController::class, 'categories']);
 Route::get('/businesses', [CatalogController::class, 'businesses']);
 Route::get('/businesses/{business}', [CatalogController::class, 'business']);

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Business;
 use App\Models\Category;
 use App\Models\Coupon;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -101,6 +102,8 @@ class DatabaseSeeder extends Seeder
                 }
             }
         }
+
+        Setting::put(Setting::DEFAULTS);
 
         Coupon::create(['code' => 'PRIMERA20', 'description' => '20% en tu primer pedido', 'type' => 'percent', 'value' => 20, 'max_discount' => 5, 'first_order_only' => true]);
         Coupon::create(['code' => 'ENVIOGRATIS', 'description' => 'Envío gratis desde $10', 'type' => 'free_delivery', 'min_order' => 10]);
