@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 class AppConfig {
-  static const appName = 'Colibrí';
+  static const appName = 'Quinde';
 
   /// Se puede sobreescribir con: flutter run --dart-define=API_URL=http://192.168.1.10:8000/api
   static const _envUrl = String.fromEnvironment('API_URL');

@@ -31,7 +31,7 @@ void main() {
 
   test('el cupón descuenta y se quita si cambia el carrito', () {
     final cart = CartState()..add(business(1), product(1, 10));
-    cart.applyCoupon('COLIBRI2', '\$2 de descuento', 2);
+    cart.applyCoupon('QUINDE2', '\$2 de descuento', 2);
     expect(cart.total, 9.5);
 
     cart.add(business(1), product(1, 10));

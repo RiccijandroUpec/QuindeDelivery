@@ -33,7 +33,7 @@ class Wordmark extends StatelessWidget {
       children: [
         if (showLogo) ...[AppLogo(size: logoSize), const SizedBox(width: 6)],
         Text(
-          'Colibrí',
+          'Quinde',
           style: t.headlineSmall?.copyWith(
             fontSize: size,
             fontWeight: FontWeight.w800,

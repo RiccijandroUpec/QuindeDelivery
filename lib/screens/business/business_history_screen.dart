@@ -123,7 +123,7 @@ class BusinessHistoryScreenState extends State<BusinessHistoryScreen> {
                                   style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
                                 ),
                                 Text(
-                                  'Comisión Colibrí (${_commissionRate.toStringAsFixed(0)}%): ${money.format(commission)} · '
+                                  'Comisión Quinde (${_commissionRate.toStringAsFixed(0)}%): ${money.format(commission)} · '
                                   'Neto: ${money.format(weekSales - commission)}',
                                   style: t.bodySmall?.copyWith(color: AppColors.muted),
                                 ),

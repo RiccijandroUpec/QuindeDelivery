@@ -31,7 +31,7 @@ void main() {
 
   testWidgets('OrderSummary muestra el descuento del cupón', (tester) async {
     await tester.pumpWidget(wrap(SingleChildScrollView(child: OrderSummary(order: Order.fromJson(orderJson())))));
-    expect(find.text('Descuento (COLIBRI2)'), findsOneWidget);
+    expect(find.text('Descuento (QUINDE2)'), findsOneWidget);
     expect(find.text('-\$2.00'), findsOneWidget);
     expect(find.text('Churrasco'), findsOneWidget);
   });

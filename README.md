@@ -1,4 +1,4 @@
-# Colibrí Delivery – App Flutter
+# Quinde Delivery – App Flutter
 
 App de delivery multi-negocio con dos roles en una sola app: **cliente** y **repartidor**.
 El backend (API + panel admin Filament) está en `C:\xampp\htdocs\delivery-api`.

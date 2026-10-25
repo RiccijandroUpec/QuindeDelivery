@@ -10,7 +10,7 @@ Map<String, dynamic> orderJson({String status = 'pendiente', Map<String, dynamic
       'subtotal': '12.50',
       'delivery_fee': 1.5,
       'discount': '2.00',
-      'coupon_code': 'COLIBRI2',
+      'coupon_code': 'QUINDE2',
       'total': 12,
       'payment_method': 'transferencia',
       'created_at': '2026-10-24T15:00:00.000000Z',
@@ -31,7 +31,7 @@ void main() {
       expect(o.lat, -0.17);
       expect(o.subtotal, 12.5);
       expect(o.discount, 2);
-      expect(o.couponCode, 'COLIBRI2');
+      expect(o.couponCode, 'QUINDE2');
       expect(o.items.first.price, 8.5);
       expect(o.items.first.productId, 3);
     });

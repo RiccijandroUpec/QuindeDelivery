@@ -35,7 +35,7 @@ class DeliveryApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final mode = context.watch<ThemeState>().mode;
     return MaterialApp(
-      title: 'Colibrí Delivery',
+      title: 'Quinde Delivery',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
       darkTheme: buildTheme(Brightness.dark),

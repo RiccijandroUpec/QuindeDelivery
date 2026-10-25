@@ -1,4 +1,4 @@
-# Colibrí Delivery – App Flutter
+# Quinde Delivery – App Flutter
 
 App de delivery multi-negocio, una sola app con tres roles: **cliente**, **repartidor** y **negocio**.
 Backend Laravel en `C:\xampp\htdocs\delivery-api` (tiene su propio CLAUDE.md).
