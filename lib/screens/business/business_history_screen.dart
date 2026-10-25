@@ -84,7 +84,7 @@ class BusinessHistoryScreenState extends State<BusinessHistoryScreen> {
     final monday = DateUtils.dateOnly(now).subtract(Duration(days: now.weekday - 1));
     final week = orders?.where((o) => o.status == 'entregado' && !o.createdAt.isBefore(monday)).toList() ?? [];
     final weekSales = week.fold(0.0, (s, o) => s + o.subtotal);
-    final commission = weekSales * _commissionRate / 100;
+    final commission = week.fold(0.0, (s, o) => s + o.commission);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Historial')),

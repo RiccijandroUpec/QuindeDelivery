@@ -20,7 +20,16 @@ class CartState extends ChangeNotifier {
   int get count => _lines.values.fold(0, (s, l) => s + l.quantity);
   double get subtotal => _lines.values.fold(0.0, (s, l) => s + l.subtotal);
   double get deliveryFee => business?.deliveryFee ?? 0;
-  double get total => (subtotal + deliveryFee - discount).clamp(0, double.infinity);
+  double get total => (subtotal + deliveryFee + serviceFee - discount).clamp(0, double.infinity);
+
+  /// Tarifa de servicio de la plataforma; se carga desde /settings al abrir el checkout.
+  double serviceFee = 0;
+
+  void setServiceFee(double v) {
+    if (v == serviceFee) return;
+    serviceFee = v;
+    notifyListeners();
+  }
 
   /// Cupón aplicado. Se quita si cambia el carrito, porque el descuento depende del subtotal.
   String? couponCode;

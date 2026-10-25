@@ -209,7 +209,7 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
                 StatusChip(o.status),
                 const Spacer(),
                 Text(
-                  money.format(o.deliveryFee),
+                  money.format(o.driverEarning),
                   style: t.titleMedium?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800),
                 ),
               ],

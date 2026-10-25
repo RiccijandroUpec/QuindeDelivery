@@ -39,6 +39,12 @@ void main() {
     expect(cart.discount, 0);
   });
 
+  test('la tarifa de servicio se suma al total', () {
+    final cart = CartState()..add(business(1), product(1, 10));
+    cart.setServiceFee(0.25);
+    expect(cart.total, 11.75);
+  });
+
   test('el total nunca es negativo', () {
     final cart = CartState()..add(business(1, fee: 0), product(1, 1));
     cart.applyCoupon('X', null, 5);

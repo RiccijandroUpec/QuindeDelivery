@@ -52,6 +52,14 @@ void main() {
       expect(Order.fromJson(orderJson(status: 'cancelado')).isActive, isFalse);
     });
 
+    test('reparto del dinero; pedidos viejos sin driver_earning usan el envío', () {
+      final o = Order.fromJson(orderJson(extra: {'service_fee': '0.25', 'commission': 1.25, 'driver_earning': '1.20'}));
+      expect(o.serviceFee, .25);
+      expect(o.commission, 1.25);
+      expect(o.driverEarning, 1.2);
+      expect(Order.fromJson(orderJson()).driverEarning, 1.5);
+    });
+
     test('withDriverAt conserva todo y mueve al repartidor', () {
       final o = Order.fromJson(orderJson()).withDriverAt(-0.175, -78.485);
       expect(o.driverLat, -0.175);

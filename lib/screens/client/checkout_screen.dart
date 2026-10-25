@@ -32,6 +32,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void initState() {
     super.initState();
     _loadAddresses();
+    _loadFees();
+  }
+
+  Future<void> _loadFees() async {
+    try {
+      final j = await Api.instance.get('/settings');
+      if (mounted) context.read<CartState>().setServiceFee((j['service_fee'] as num).toDouble());
+    } catch (_) {}
   }
 
   Future<void> _loadAddresses() async {
@@ -268,6 +276,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   _row('Subtotal', money.format(cart.subtotal)),
                   const SizedBox(height: 6),
                   _row('Envío', money.format(cart.deliveryFee)),
+                  if (cart.serviceFee > 0) ...[
+                    const SizedBox(height: 6),
+                    _row('Tarifa de servicio', money.format(cart.serviceFee)),
+                  ],
                   if (cart.discount > 0) ...[
                     const SizedBox(height: 6),
                     _row('Descuento', '-${money.format(cart.discount)}', style: t.bodyMedium?.copyWith(color: AppColors.accent)),

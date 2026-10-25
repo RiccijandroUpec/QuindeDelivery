@@ -43,7 +43,7 @@ class MyDeliveriesScreenState extends State<MyDeliveriesScreen> {
     final orders = _orders;
     final active = orders?.where((o) => o.isActive).toList() ?? [];
     final done = orders?.where((o) => !o.isActive).toList() ?? [];
-    final earned = done.where((o) => o.status == 'entregado').fold(0.0, (s, o) => s + o.deliveryFee);
+    final earned = done.where((o) => o.status == 'entregado').fold(0.0, (s, o) => s + o.driverEarning);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mis entregas')),
@@ -143,7 +143,7 @@ class MyDeliveriesScreenState extends State<MyDeliveriesScreen> {
               StatusChip(o.status),
               const SizedBox(height: 4),
               Text(
-                money.format(o.deliveryFee),
+                money.format(o.driverEarning),
                 style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary),
               ),
             ],

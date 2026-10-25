@@ -92,6 +92,7 @@ class OrderSummary extends StatelessWidget {
             const Divider(height: 24),
             row('Subtotal', money.format(o.subtotal)),
             row('Envío', money.format(o.deliveryFee)),
+            if (o.serviceFee > 0) row('Tarifa de servicio', money.format(o.serviceFee)),
             if (o.discount > 0) row('Descuento${o.couponCode != null ? ' (${o.couponCode})' : ''}', '-${money.format(o.discount)}'),
             row('Total', money.format(o.total), bold: true),
           ],

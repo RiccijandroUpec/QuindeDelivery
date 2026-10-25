@@ -251,6 +251,9 @@ class Order {
     required this.subtotal,
     required this.deliveryFee,
     this.discount = 0,
+    this.serviceFee = 0,
+    this.commission = 0,
+    this.driverEarning = 0,
     this.couponCode,
     required this.total,
     required this.paymentMethod,
@@ -282,6 +285,11 @@ class Order {
   final double subtotal;
   final double deliveryFee;
   final double discount;
+  final double serviceFee;
+  final double commission;
+
+  /// Lo que gana el repartidor por este pedido (su parte del envío).
+  final double driverEarning;
   final String? couponCode;
   final double total;
   final String paymentMethod;
@@ -324,6 +332,9 @@ class Order {
     subtotal: _d(j['subtotal']),
     deliveryFee: _d(j['delivery_fee']),
     discount: _d(j['discount']),
+    serviceFee: _d(j['service_fee']),
+    commission: _d(j['commission']),
+    driverEarning: j['driver_earning'] != null ? _d(j['driver_earning']) : _d(j['delivery_fee']),
     couponCode: j['coupon_code'],
     total: _d(j['total']),
     paymentMethod: j['payment_method'] ?? 'efectivo',
