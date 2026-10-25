@@ -74,8 +74,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _open(Business b) =>
-      Navigator.push(context, MaterialPageRoute(builder: (_) => BusinessScreen(businessId: b.id, preview: b)));
+  void _open(Business b) => Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => BusinessScreen(businessId: b.id, preview: b),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -112,8 +116,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Hola, ${user?.name.split(' ').first ?? ''} 👋',
-                                      style: t.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
+                                  Text(
+                                    'Hola, ${user?.name.split(' ').first ?? ''} 👋',
+                                    style: t.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+                                  ),
                                   Text('¿Qué se te antoja hoy?', style: t.bodySmall?.copyWith(color: Colors.white70)),
                                 ],
                               ),
@@ -169,10 +175,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: Icon(categoryIcon(c.icon), color: selected ? Colors.white : color, size: 28),
                               ),
                               const SizedBox(height: 6),
-                              Text(c.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: t.labelSmall?.copyWith(fontWeight: selected ? FontWeight.w700 : FontWeight.w500)),
+                              Text(
+                                c.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: t.labelSmall?.copyWith(fontWeight: selected ? FontWeight.w700 : FontWeight.w500),
+                              ),
                             ],
                           ),
                         ),
@@ -203,7 +211,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       scrollDirection: Axis.horizontal,
                       itemCount: featured.length,
                       separatorBuilder: (_, _) => const SizedBox(width: 12),
-                      itemBuilder: (_, i) => SizedBox(width: 280, child: BusinessCard(business: featured[i], onTap: () => _open(featured[i]))),
+                      itemBuilder: (_, i) => SizedBox(
+                        width: 280,
+                        child: BusinessCard(business: featured[i], onTap: () => _open(featured[i])),
+                      ),
                     ),
                   ),
                 ),
@@ -211,7 +222,11 @@ class _HomeScreenState extends State<HomeScreen> {
               _sectionTitle(_search.isNotEmpty ? 'Resultados' : 'Todos los negocios'),
               if (_businesses.isEmpty)
                 const SliverToBoxAdapter(
-                  child: EmptyState(icon: Icons.search_off_rounded, title: 'No encontramos nada', message: 'Prueba con otra búsqueda o categoría.'),
+                  child: EmptyState(
+                    icon: Icons.search_off_rounded,
+                    title: 'No encontramos nada',
+                    message: 'Prueba con otra búsqueda o categoría.',
+                  ),
                 )
               else
                 SliverPadding(
@@ -237,11 +252,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _sectionTitle(String text) => SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-          child: Text(text, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-        ),
-      );
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+      child: Text(text, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+    ),
+  );
 }
 
 class BusinessCard extends StatelessWidget {
@@ -270,7 +285,10 @@ class BusinessCard extends StatelessWidget {
                     Container(
                       color: Colors.black54,
                       alignment: Alignment.center,
-                      child: const Text('Cerrado', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                      child: const Text(
+                        'Cerrado',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                      ),
                     ),
                   Positioned(
                     right: 10,
@@ -278,11 +296,13 @@ class BusinessCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                      child: Row(children: [
-                        const Icon(Icons.schedule_rounded, size: 14, color: AppColors.primary),
-                        const SizedBox(width: 4),
-                        Text(b.timeLabel, style: t.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
-                      ]),
+                      child: Row(
+                        children: [
+                          Icon(Icons.schedule_rounded, size: 14, color: AppColors.primary),
+                          const SizedBox(width: 4),
+                          Text(b.timeLabel, style: t.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -296,7 +316,12 @@ class BusinessCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(b.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                        Text(
+                          b.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                        ),
                         Text(
                           '${b.categoryName ?? ''} · Envío ${money.format(b.deliveryFee)}',
                           maxLines: 1,

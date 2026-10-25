@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../api.dart';
 import '../../models.dart';
+import '../../state/realtime.dart';
 import '../../theme.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/order_map.dart';
@@ -24,19 +25,33 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   Order? _order;
   String? _error;
   Timer? _timer;
+  final _live = <StreamSubscription<void>>[];
 
   @override
   void initState() {
     super.initState();
     _load();
-    // Consulta periódica del estado y la ubicación del repartidor.
-    _timer = Timer.periodic(const Duration(seconds: 8), (_) {
+    final channel = 'orders.${widget.orderId}';
+    _live
+      ..add(Realtime.instance.on(channel, 'order.changed').listen((_) => _load()))
+      ..add(
+        Realtime.instance.on(channel, 'driver.moved').listen((d) {
+          final o = _order;
+          final lat = (d['lat'] as num?)?.toDouble(), lng = (d['lng'] as num?)?.toDouble();
+          if (o != null && lat != null && lng != null && mounted) setState(() => _order = o.withDriverAt(lat, lng));
+        }),
+      );
+    // Respaldo por si no hay conexión en tiempo real.
+    _timer = Timer.periodic(const Duration(seconds: 20), (_) {
       if (_order?.isActive ?? true) _load();
     });
   }
 
   @override
   void dispose() {
+    for (final s in _live) {
+      s.cancel();
+    }
     _timer?.cancel();
     super.dispose();
   }
@@ -58,7 +73,10 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         content: const Text('Solo puedes cancelar mientras el negocio no lo haya aceptado.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('No')),
-          TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Sí, cancelar', style: TextStyle(color: Colors.red))),
+          TextButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Sí, cancelar', style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
@@ -79,9 +97,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('Pedido #${widget.orderId}')),
       body: o == null
-          ? (_error != null
-              ? EmptyState(icon: Icons.error_outline, title: 'No se pudo cargar', message: _error)
-              : const BirdLoader())
+          ? (_error != null ? EmptyState(icon: Icons.error_outline, title: 'No se pudo cargar', message: _error) : const BirdLoader())
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
@@ -92,15 +108,25 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: .1), borderRadius: BorderRadius.circular(14)),
-                      child: Row(children: [
-                        const Icon(Icons.check_circle_rounded, color: AppColors.primary),
-                        const SizedBox(width: 10),
-                        Expanded(child: Text('¡Pedido enviado! Esperando que ${o.business?.name ?? 'el negocio'} lo acepte.')),
-                      ]),
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle_rounded, color: AppColors.primary),
+                          const SizedBox(width: 10),
+                          Expanded(child: Text('¡Pedido enviado! Esperando que ${o.business?.name ?? 'el negocio'} lo acepte.')),
+                        ],
+                      ),
                     ),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(18),
-                    child: SizedBox(height: 240, child: OrderMap(order: o)),
+                    child: SizedBox(
+                      height: 240,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(child: OrderMap(order: o)),
+                          Positioned(left: 12, top: 12, child: EtaBadge(order: o)),
+                        ],
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Card(
@@ -111,7 +137,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                         children: [
                           Row(
                             children: [
-                              Expanded(child: Text(_headline(o.status), style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700))),
+                              Expanded(
+                                child: Text(_headline(o.status), style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                              ),
                               StatusChip(o.status),
                             ],
                           ),
@@ -131,7 +159,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                     const SizedBox(height: 12),
                     Card(
                       child: ListTile(
-                        leading: const CircleAvatar(
+                        leading: CircleAvatar(
                           backgroundColor: Color(0xFFECFDF5),
                           child: Icon(Icons.two_wheeler_rounded, color: AppColors.primary),
                         ),
@@ -167,14 +195,14 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   }
 
   String _headline(String s) => switch (s) {
-        'pendiente' => 'Esperando confirmación',
-        'aceptado' => 'El negocio aceptó tu pedido',
-        'preparando' => 'Preparando tu pedido',
-        'listo' => 'Listo, esperando al repartidor',
-        'en_camino' => '¡Tu pedido va volando! 🛵',
-        'entregado' => 'Pedido entregado 🎉',
-        _ => 'Pedido cancelado',
-      };
+    'pendiente' => 'Esperando confirmación',
+    'aceptado' => 'El negocio aceptó tu pedido',
+    'preparando' => 'Preparando tu pedido',
+    'listo' => 'Listo, esperando al repartidor',
+    'en_camino' => '¡Tu pedido va volando! 🛵',
+    'entregado' => 'Pedido entregado 🎉',
+    _ => 'Pedido cancelado',
+  };
 }
 
 class _Timeline extends StatelessWidget {
@@ -187,7 +215,13 @@ class _Timeline extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     // "listo" se muestra como parte de "preparando" en la línea de tiempo.
     final current = OrderStatus.steps.indexOf(status == 'listo' ? 'preparando' : status);
-    const icons = [Icons.receipt_long_rounded, Icons.thumb_up_alt_rounded, Icons.soup_kitchen_rounded, Icons.two_wheeler_rounded, Icons.home_rounded];
+    const icons = [
+      Icons.receipt_long_rounded,
+      Icons.thumb_up_alt_rounded,
+      Icons.soup_kitchen_rounded,
+      Icons.two_wheeler_rounded,
+      Icons.home_rounded,
+    ];
     const labels = ['Recibido', 'Aceptado', 'Preparando', 'En camino', 'Entregado'];
 
     return Row(
@@ -199,19 +233,18 @@ class _Timeline extends StatelessWidget {
                 duration: const Duration(milliseconds: 300),
                 width: 36,
                 height: 36,
-                decoration: BoxDecoration(
-                  color: i <= current ? AppColors.primary : AppColors.border,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: i <= current ? AppColors.primary : AppColors.border, shape: BoxShape.circle),
                 child: Icon(icons[i], size: 18, color: i <= current ? Colors.white : AppColors.muted),
               ),
               const SizedBox(height: 4),
-              Text(labels[i],
-                  style: t.labelSmall?.copyWith(
-                    fontSize: 10,
-                    fontWeight: i == current ? FontWeight.w700 : FontWeight.w400,
-                    color: i <= current ? AppColors.ink : AppColors.muted,
-                  )),
+              Text(
+                labels[i],
+                style: t.labelSmall?.copyWith(
+                  fontSize: 10,
+                  fontWeight: i == current ? FontWeight.w700 : FontWeight.w400,
+                  color: i <= current ? AppColors.ink : AppColors.muted,
+                ),
+              ),
             ],
           ),
           if (i < OrderStatus.steps.length - 1)
@@ -270,15 +303,19 @@ class _TransferCardState extends State<_TransferCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              const Icon(Icons.account_balance_rounded, color: AppColors.cyan),
-              const SizedBox(width: 10),
-              Expanded(child: Text('Pago por transferencia', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w800))),
-              if (sent)
-                const Icon(Icons.verified_rounded, color: AppColors.primary)
-              else
-                Text(money.format(o.total), style: t.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
-            ]),
+            Row(
+              children: [
+                const Icon(Icons.account_balance_rounded, color: AppColors.cyan),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text('Pago por transferencia', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                ),
+                if (sent)
+                  Icon(Icons.verified_rounded, color: AppColors.primary)
+                else
+                  Text(money.format(o.total), style: t.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+              ],
+            ),
             const SizedBox(height: 10),
             if (o.business?.bankInfo?.isNotEmpty ?? false)
               Container(
@@ -291,14 +328,24 @@ class _TransferCardState extends State<_TransferCard> {
             if (sent) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(o.transferProofUrl!, height: 140, width: double.infinity, fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const SizedBox.shrink()),
+                child: Image.network(
+                  o.transferProofUrl!,
+                  height: 140,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
               ),
               const SizedBox(height: 8),
-              Text('Comprobante enviado ✓', style: t.bodySmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
+              Text(
+                'Comprobante enviado ✓',
+                style: t.bodySmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
+              ),
             ] else
-              Text('Transfiere el total y sube la foto del comprobante para que el negocio lo verifique.',
-                  style: t.bodySmall?.copyWith(color: AppColors.muted)),
+              Text(
+                'Transfiere el total y sube la foto del comprobante para que el negocio lo verifique.',
+                style: t.bodySmall?.copyWith(color: AppColors.muted),
+              ),
             if (canUpload) ...[
               const SizedBox(height: 12),
               OutlinedButton.icon(
@@ -357,11 +404,15 @@ class _RatingCardState extends State<_RatingCard> {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(children: [
-            StarRating(value: o.rating!, size: 22),
-            const SizedBox(width: 10),
-            Expanded(child: Text(o.ratingComment ?? 'Tu calificación', style: t.bodySmall?.copyWith(color: AppColors.muted))),
-          ]),
+          child: Row(
+            children: [
+              StarRating(value: o.rating!, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(o.ratingComment ?? 'Tu calificación', style: t.bodySmall?.copyWith(color: AppColors.muted)),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -378,7 +429,10 @@ class _RatingCardState extends State<_RatingCard> {
             StarRating(value: _stars, size: 38, onChanged: (v) => setState(() => _stars = v)),
             if (_stars > 0) ...[
               const SizedBox(height: 12),
-              TextField(controller: _comment, decoration: const InputDecoration(hintText: 'Cuéntanos más (opcional)')),
+              TextField(
+                controller: _comment,
+                decoration: const InputDecoration(hintText: 'Cuéntanos más (opcional)'),
+              ),
               const SizedBox(height: 12),
               FilledButton(
                 onPressed: _sending ? null : _send,

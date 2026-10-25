@@ -32,30 +32,31 @@ class Wordmark extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (showLogo) ...[AppLogo(size: logoSize), const SizedBox(width: 6)],
-        Text('Colibrí',
-            style: t.headlineSmall?.copyWith(
-              fontSize: size,
-              fontWeight: FontWeight.w800,
-              height: 1,
-              letterSpacing: -.5,
-              color: light ? Colors.white : AppColors.ink,
-            )),
+        Text(
+          'Colibrí',
+          style: t.headlineSmall?.copyWith(
+            fontSize: size,
+            fontWeight: FontWeight.w800,
+            height: 1,
+            letterSpacing: -.5,
+            color: light ? Colors.white : AppColors.ink,
+          ),
+        ),
         SizedBox(width: size * .22),
         // Píldora como la de "POS" en Quinde.
         Container(
           padding: EdgeInsets.symmetric(horizontal: size * .26, vertical: size * .08),
-          decoration: BoxDecoration(
-            color: light ? AppColors.primaryLight : AppColors.primary,
-            borderRadius: BorderRadius.circular(size),
+          decoration: BoxDecoration(color: light ? AppColors.primaryLight : AppColors.primary, borderRadius: BorderRadius.circular(size)),
+          child: Text(
+            'DELIVERY',
+            style: t.labelSmall?.copyWith(
+              fontSize: size * .34,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1,
+              height: 1.1,
+              color: light ? AppColors.ink : Colors.white,
+            ),
           ),
-          child: Text('DELIVERY',
-              style: t.labelSmall?.copyWith(
-                fontSize: size * .34,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1,
-                height: 1.1,
-                color: light ? AppColors.ink : Colors.white,
-              )),
         ),
       ],
     );
@@ -93,7 +94,15 @@ class PolyPainter extends CustomPainter {
       for (var c = 0; c < cols - 1; c++) {
         final a = pts[r][c], b = pts[r][c + 1], d = pts[r + 1][c], e = pts[r + 1][c + 1];
         final flip = rnd.nextBool();
-        final tris = flip ? [[a, b, e], [a, e, d]] : [[a, b, d], [b, e, d]];
+        final tris = flip
+            ? [
+                [a, b, e],
+                [a, e, d],
+              ]
+            : [
+                [a, b, d],
+                [b, e, d],
+              ];
         for (final t in tris) {
           final cx = (t[0].dx + t[1].dx + t[2].dx) / 3;
           final cy = (t[0].dy + t[1].dy + t[2].dy) / 3;
@@ -132,28 +141,28 @@ class PolyBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CustomPaint(
-        painter: PolyPainter(seed: seed, colors: colors, cell: cell),
-        // Velo de luz: brillo cálido arriba a la derecha y sombra abajo para dar profundidad.
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(.9, -1.1),
-              radius: 1.3,
-              colors: [AppColors.accent.withValues(alpha: .16), Colors.transparent],
-            ),
-          ),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.black.withValues(alpha: .18)],
-              ),
-            ),
-            child: child,
+    painter: PolyPainter(seed: seed, colors: colors, cell: cell),
+    // Velo de luz: brillo cálido arriba a la derecha y sombra abajo para dar profundidad.
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: const Alignment(.9, -1.1),
+          radius: 1.3,
+          colors: [AppColors.accent.withValues(alpha: .16), Colors.transparent],
+        ),
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.transparent, Colors.black.withValues(alpha: .18)],
           ),
         ),
-      );
+        child: child,
+      ),
+    ),
+  );
 }
 
 /// El colibrí suspendido en el aire: flota, se inclina y vibra como si aleteara.
@@ -233,15 +242,14 @@ class BirdLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const HoveringBird(size: 56, glow: false),
-            if (message != null)
-              Text(message!, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.muted)),
-          ],
-        ),
-      );
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const HoveringBird(size: 56, glow: false),
+        if (message != null) Text(message!, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.muted)),
+      ],
+    ),
+  );
 }
 
 /// Abre el marcador del teléfono.
@@ -265,14 +273,11 @@ class CallButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => IconButton.filledTonal(
-        tooltip: tooltip,
-        style: IconButton.styleFrom(
-          backgroundColor: AppColors.primary.withValues(alpha: .1),
-          foregroundColor: AppColors.primary,
-        ),
-        onPressed: phone == null ? null : () => callPhone(context, phone),
-        icon: const Icon(Icons.call_rounded, size: 20),
-      );
+    tooltip: tooltip,
+    style: IconButton.styleFrom(backgroundColor: AppColors.primary.withValues(alpha: .1), foregroundColor: AppColors.primary),
+    onPressed: phone == null ? null : () => callPhone(context, phone),
+    icon: const Icon(Icons.call_rounded, size: 20),
+  );
 }
 
 /// Estrellas de calificación (solo lectura o seleccionables).
@@ -285,36 +290,36 @@ class StarRating extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 1; i <= 5; i++)
-            GestureDetector(
-              onTap: onChanged == null ? null : () => onChanged!(i),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: AnimatedScale(
-                  scale: i <= value ? 1 : .88,
-                  duration: const Duration(milliseconds: 150),
-                  child: Icon(i <= value ? Icons.star_rounded : Icons.star_outline_rounded, size: size, color: AppColors.gold),
-                ),
-              ),
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      for (var i = 1; i <= 5; i++)
+        GestureDetector(
+          onTap: onChanged == null ? null : () => onChanged!(i),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: AnimatedScale(
+              scale: i <= value ? 1 : .88,
+              duration: const Duration(milliseconds: 150),
+              child: Icon(i <= value ? Icons.star_rounded : Icons.star_outline_rounded, size: size, color: AppColors.gold),
             ),
-        ],
-      );
+          ),
+        ),
+    ],
+  );
 }
 
 IconData categoryIcon(String name) => switch (name) {
-      'restaurant' => Icons.restaurant_rounded,
-      'pizza' => Icons.local_pizza_rounded,
-      'burger' => Icons.lunch_dining_rounded,
-      'coffee' => Icons.local_cafe_rounded,
-      'pharmacy' => Icons.local_pharmacy_rounded,
-      'market' => Icons.local_grocery_store_rounded,
-      'liquor' => Icons.liquor_rounded,
-      'pets' => Icons.pets_rounded,
-      'dessert' => Icons.icecream_rounded,
-      _ => Icons.storefront_rounded,
-    };
+  'restaurant' => Icons.restaurant_rounded,
+  'pizza' => Icons.local_pizza_rounded,
+  'burger' => Icons.lunch_dining_rounded,
+  'coffee' => Icons.local_cafe_rounded,
+  'pharmacy' => Icons.local_pharmacy_rounded,
+  'market' => Icons.local_grocery_store_rounded,
+  'liquor' => Icons.liquor_rounded,
+  'pets' => Icons.pets_rounded,
+  'dessert' => Icons.icecream_rounded,
+  _ => Icons.storefront_rounded,
+};
 
 /// Imagen de red con un placeholder de polígonos si no hay foto.
 class PolyImage extends StatelessWidget {
@@ -337,7 +342,9 @@ class PolyImage extends StatelessWidget {
       seed: seed,
       cell: 40,
       colors: palettes[seed % palettes.length],
-      child: Center(child: Icon(icon, color: Colors.white.withValues(alpha: .92), size: iconSize)),
+      child: Center(
+        child: Icon(icon, color: Colors.white.withValues(alpha: .92), size: iconSize),
+      ),
     );
     if (url == null || url!.isEmpty) return SizedBox.expand(child: placeholder);
     return Image.network(
@@ -365,9 +372,16 @@ class StatusChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
           const SizedBox(width: 6),
-          Text(OrderStatus.label(status), style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12)),
+          Text(
+            OrderStatus.label(status),
+            style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -405,10 +419,18 @@ class EmptyState extends StatelessWidget {
               child: Icon(icon, size: 42, color: AppColors.primary),
             ),
             const SizedBox(height: 16),
-            Text(title, style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+            Text(
+              title,
+              style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              textAlign: TextAlign.center,
+            ),
             if (message != null) ...[
               const SizedBox(height: 6),
-              Text(message!, style: t.bodyMedium?.copyWith(color: AppColors.muted), textAlign: TextAlign.center),
+              Text(
+                message!,
+                style: t.bodyMedium?.copyWith(color: AppColors.muted),
+                textAlign: TextAlign.center,
+              ),
             ],
             if (action != null) ...[const SizedBox(height: 20), action!],
           ],
@@ -421,8 +443,5 @@ class EmptyState extends StatelessWidget {
 void showMessage(BuildContext context, Object message, {bool error = true}) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(
-      content: Text(message.toString()),
-      backgroundColor: error ? const Color(0xFFDC2626) : AppColors.primaryDark,
-    ));
+    ..showSnackBar(SnackBar(content: Text(message.toString()), backgroundColor: error ? const Color(0xFFDC2626) : AppColors.primaryDark));
 }

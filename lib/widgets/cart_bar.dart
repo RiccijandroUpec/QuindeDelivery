@@ -32,16 +32,24 @@ class CartBar extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(10)),
-                    child: Text('${cart.count}', style: t.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
+                    child: Text(
+                      '${cart.count}',
+                      style: t.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text('Ver carrito · ${cart.business?.name ?? ''}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: t.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+                    child: Text(
+                      'Ver carrito · ${cart.business?.name ?? ''}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: t.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
                   ),
-                  Text(money.format(cart.subtotal), style: t.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
+                  Text(
+                    money.format(cart.subtotal),
+                    style: t.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+                  ),
                 ],
               ),
             ),

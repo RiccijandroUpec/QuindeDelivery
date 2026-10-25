@@ -7,14 +7,15 @@ Backend Laravel en `C:\xampp\htdocs\delivery-api` (tiene su propio CLAUDE.md).
 - Correr: `flutter run -d chrome` (o `-d <dispositivo>`)
 - Celular físico / server remoto: `flutter run --dart-define=API_URL=http://IP:8000/api`
 - APK: `flutter build apk --release --dart-define=API_URL=https://.../api`
-- Análisis: `flutter analyze` · Tests: `flutter test`
+- Análisis: `flutter analyze` · Tests: `flutter test` (`test/`: modelos, carrito, widgets)
 
 ## Estructura (lib/)
 - `config.dart` – `AppConfig.apiUrl` (web → localhost, emulador Android → 10.0.2.2, o `API_URL`)
-- `api.dart` – cliente HTTP único (token Sanctum en header Bearer)
+- `api.dart` – cliente HTTP único (token Sanctum en header Bearer; `upload` multipart)
+- `config.dart` – URLs: API, Reverb (`REVERB_HOST/PORT/KEY`), OSRM (`OSRM_URL`), todas por `--dart-define`
 - `models.dart` – todos los modelos
 - `theme.dart` – colores/tema
-- `state/` – `auth_state`, `cart_state`, `location_service` (Provider)
+- `state/` – `auth_state`, `cart_state` (incluye cupón y repetir pedido), `location_service`, `theme_state` (claro/oscuro/sistema), `realtime` (Reverb con `dart_pusher_channels`, `Realtime.instance.on(canal, evento)`), `route_service` (OSRM)
 - `widgets/` – `brand` (logo, `HoveringBird` animado, `BirdLoader`, `PolyBackground`, `StatusChip`, `CallButton`, `StarRating`), `cart_bar`, `order_map` (flutter_map + OSM), `order_summary`
 - `screens/auth/` – login, registro
 - `screens/client/` – shell, home, negocio, checkout, address_picker, orders, order_tracking
@@ -28,7 +29,8 @@ Backend Laravel en `C:\xampp\htdocs\delivery-api` (tiene su propio CLAUDE.md).
 - Textos de la UI en español.
 - Estilo premium: colores y tema en `theme.dart` (`AppColors.night/gold/brandGradient`, fuente Plus Jakarta Sans). Cargas de página con `BirdLoader`, no `CircularProgressIndicator`.
 - Llamadas con `url_launcher` (`callPhone`), fotos con `image_picker` + `Api.upload`.
-- Sin websockets: seguimiento por polling (cliente cada 8 s, repartidor envía ubicación cada 10 s).
+- Tiempo real con Reverb; cada pantalla mantiene además un polling lento de respaldo (20–30 s). El repartidor envía ubicación cada 10 s.
+- Colores: `AppColors.*` son getters de la paleta activa (`AppPalette.light/dark`); no usar `AppColors` dentro de `const`. Para superficies usar `AppColors.card`, no `Colors.white`.
 
 ## Flujo de pedido
 `pendiente` → (negocio) `aceptado` → `preparando` → `listo` → (repartidor) `en_camino` → `entregado`

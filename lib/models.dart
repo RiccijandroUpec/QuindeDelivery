@@ -26,32 +26,32 @@ class User {
   bool get isBusiness => role == 'negocio';
 
   String get roleLabel => switch (role) {
-        'repartidor' => 'Repartidor',
-        'negocio' => 'Negocio',
-        _ => 'Cliente',
-      };
+    'repartidor' => 'Repartidor',
+    'negocio' => 'Negocio',
+    _ => 'Cliente',
+  };
 
   factory User.fromJson(Map<String, dynamic> j) => User(
-        id: j['id'],
-        name: j['name'] ?? '',
-        email: j['email'] ?? '',
-        role: j['role'] ?? 'cliente',
-        phone: j['phone'],
-        vehicle: j['vehicle'],
-        businessId: j['business_id'],
-        businessName: j['business']?['name'],
-      );
+    id: j['id'],
+    name: j['name'] ?? '',
+    email: j['email'] ?? '',
+    role: j['role'] ?? 'cliente',
+    phone: j['phone'],
+    vehicle: j['vehicle'],
+    businessId: j['business_id'],
+    businessName: j['business']?['name'],
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'email': email,
-        'role': role,
-        'phone': phone,
-        'vehicle': vehicle,
-        'business_id': businessId,
-        if (businessName != null) 'business': {'name': businessName},
-      };
+    'id': id,
+    'name': name,
+    'email': email,
+    'role': role,
+    'phone': phone,
+    'vehicle': vehicle,
+    'business_id': businessId,
+    if (businessName != null) 'business': {'name': businessName},
+  };
 }
 
 class Category {
@@ -88,15 +88,15 @@ class Product {
   final bool available;
 
   factory Product.fromJson(Map<String, dynamic> j) => Product(
-        id: j['id'],
-        businessId: j['business_id'],
-        name: j['name'],
-        section: j['section'] ?? 'General',
-        price: _d(j['price']),
-        description: j['description'],
-        imageUrl: j['image_url'],
-        available: j['available'] ?? true,
-      );
+    id: j['id'],
+    businessId: j['business_id'],
+    name: j['name'],
+    section: j['section'] ?? 'General',
+    price: _d(j['price']),
+    description: j['description'],
+    imageUrl: j['image_url'],
+    available: j['available'] ?? true,
+  );
 }
 
 class Business {
@@ -119,6 +119,9 @@ class Business {
     this.rating = 0,
     this.ratingCount = 0,
     this.isOpen = true,
+    this.commissionRate = 0,
+    this.opensAt,
+    this.closesAt,
     this.featured = false,
     this.products = const [],
   });
@@ -140,34 +143,43 @@ class Business {
   final int timeMax;
   final double rating;
   final int ratingCount;
+
+  /// Abierto ahora: respeta la pausa manual y el horario de atención.
   final bool isOpen;
+  final double commissionRate;
+  final String? opensAt;
+  final String? closesAt;
   final bool featured;
   final List<Product> products;
 
   String get timeLabel => '$timeMin-$timeMax min';
+  String? get hoursLabel => opensAt != null && closesAt != null ? '${opensAt!.substring(0, 5)} – ${closesAt!.substring(0, 5)}' : null;
 
   factory Business.fromJson(Map<String, dynamic> j) => Business(
-        id: j['id'],
-        name: j['name'] ?? '',
-        description: j['description'],
-        categoryName: j['category']?['name'],
-        logoUrl: j['logo_url'],
-        coverUrl: j['cover_url'],
-        address: j['address'],
-        phone: j['phone'],
-        bankInfo: j['bank_info'],
-        lat: _dn(j['lat']),
-        lng: _dn(j['lng']),
-        deliveryFee: _d(j['delivery_fee']),
-        minOrder: _d(j['min_order']),
-        timeMin: j['time_min'] ?? 20,
-        timeMax: j['time_max'] ?? 40,
-        rating: _d(j['rating']),
-        ratingCount: j['rating_count'] ?? 0,
-        isOpen: j['is_open'] ?? true,
-        featured: j['featured'] ?? false,
-        products: (j['products'] as List? ?? []).map((p) => Product.fromJson(p)).toList(),
-      );
+    id: j['id'],
+    name: j['name'] ?? '',
+    description: j['description'],
+    categoryName: j['category']?['name'],
+    logoUrl: j['logo_url'],
+    coverUrl: j['cover_url'],
+    address: j['address'],
+    phone: j['phone'],
+    bankInfo: j['bank_info'],
+    lat: _dn(j['lat']),
+    lng: _dn(j['lng']),
+    deliveryFee: _d(j['delivery_fee']),
+    minOrder: _d(j['min_order']),
+    timeMin: j['time_min'] ?? 20,
+    timeMax: j['time_max'] ?? 40,
+    rating: _d(j['rating']),
+    ratingCount: j['rating_count'] ?? 0,
+    isOpen: j['open_now'] ?? j['is_open'] ?? true,
+    commissionRate: _d(j['commission_rate']),
+    opensAt: j['opens_at'],
+    closesAt: j['closes_at'],
+    featured: j['featured'] ?? false,
+    products: (j['products'] as List? ?? []).map((p) => Product.fromJson(p)).toList(),
+  );
 }
 
 class Address {
@@ -181,21 +193,21 @@ class Address {
   final double lng;
 
   factory Address.fromJson(Map<String, dynamic> j) => Address(
-        id: j['id'],
-        label: j['label'] ?? '',
-        address: j['address'] ?? '',
-        reference: j['reference'],
-        lat: _d(j['lat']),
-        lng: _d(j['lng']),
-      );
+    id: j['id'],
+    label: j['label'] ?? '',
+    address: j['address'] ?? '',
+    reference: j['reference'],
+    lat: _d(j['lat']),
+    lng: _d(j['lng']),
+  );
 
-  Map<String, dynamic> toJson() =>
-      {'label': label, 'address': address, 'reference': reference, 'lat': lat, 'lng': lng};
+  Map<String, dynamic> toJson() => {'label': label, 'address': address, 'reference': reference, 'lat': lat, 'lng': lng};
 }
 
 class OrderItem {
-  OrderItem({required this.name, required this.price, required this.quantity, required this.subtotal, this.notes});
+  OrderItem({this.productId, required this.name, required this.price, required this.quantity, required this.subtotal, this.notes});
 
+  final int? productId;
   final String name;
   final double price;
   final int quantity;
@@ -203,12 +215,13 @@ class OrderItem {
   final String? notes;
 
   factory OrderItem.fromJson(Map<String, dynamic> j) => OrderItem(
-        name: j['name'],
-        price: _d(j['price']),
-        quantity: j['quantity'],
-        subtotal: _d(j['subtotal']),
-        notes: j['notes'],
-      );
+    productId: j['product_id'],
+    name: j['name'],
+    price: _d(j['price']),
+    quantity: j['quantity'],
+    subtotal: _d(j['subtotal']),
+    notes: j['notes'],
+  );
 }
 
 class OrderStatus {
@@ -237,6 +250,8 @@ class Order {
     required this.lng,
     required this.subtotal,
     required this.deliveryFee,
+    this.discount = 0,
+    this.couponCode,
     required this.total,
     required this.paymentMethod,
     required this.createdAt,
@@ -266,6 +281,8 @@ class Order {
   final double lng;
   final double subtotal;
   final double deliveryFee;
+  final double discount;
+  final String? couponCode;
   final double total;
   final String paymentMethod;
   final double? cashAmount;
@@ -289,32 +306,42 @@ class Order {
   bool get isTransfer => paymentMethod == 'transferencia';
   int get itemCount => items.fold(0, (s, i) => s + i.quantity);
 
-  factory Order.fromJson(Map<String, dynamic> j) => Order(
-        id: j['id'],
-        status: j['status'],
-        address: j['address'] ?? '',
-        reference: j['reference'],
-        lat: _d(j['lat']),
-        lng: _d(j['lng']),
-        subtotal: _d(j['subtotal']),
-        deliveryFee: _d(j['delivery_fee']),
-        total: _d(j['total']),
-        paymentMethod: j['payment_method'] ?? 'efectivo',
-        cashAmount: _dn(j['cash_amount']),
-        notes: j['notes'],
-        cancelReason: j['cancel_reason'],
-        transferProofUrl: j['transfer_proof_url'],
-        rating: j['rating'],
-        ratingComment: j['rating_comment'],
-        createdAt: DateTime.tryParse(j['created_at'] ?? '')?.toLocal() ?? DateTime.now(),
-        business: j['business'] != null ? Business.fromJson(j['business']) : null,
-        items: (j['items'] as List? ?? []).map((i) => OrderItem.fromJson(i)).toList(),
-        driverName: j['driver']?['name'],
-        driverPhone: j['driver']?['phone'],
-        driverVehicle: j['driver']?['vehicle'],
-        driverLat: _dn(j['driver_lat']),
-        driverLng: _dn(j['driver_lng']),
-        clientName: j['user']?['name'],
-        clientPhone: j['user']?['phone'],
-      );
+  /// JSON original, para crear copias con cambios puntuales.
+  late final Map<String, dynamic> raw;
+
+  /// El mismo pedido con la nueva posición del repartidor (evento en tiempo real).
+  Order withDriverAt(double lat, double lng) => Order.fromJson({...raw, 'driver_lat': lat, 'driver_lng': lng});
+
+  factory Order.fromJson(Map<String, dynamic> j) => Order._fromJson(j)..raw = j;
+
+  factory Order._fromJson(Map<String, dynamic> j) => Order(
+    id: j['id'],
+    status: j['status'],
+    address: j['address'] ?? '',
+    reference: j['reference'],
+    lat: _d(j['lat']),
+    lng: _d(j['lng']),
+    subtotal: _d(j['subtotal']),
+    deliveryFee: _d(j['delivery_fee']),
+    discount: _d(j['discount']),
+    couponCode: j['coupon_code'],
+    total: _d(j['total']),
+    paymentMethod: j['payment_method'] ?? 'efectivo',
+    cashAmount: _dn(j['cash_amount']),
+    notes: j['notes'],
+    cancelReason: j['cancel_reason'],
+    transferProofUrl: j['transfer_proof_url'],
+    rating: j['rating'],
+    ratingComment: j['rating_comment'],
+    createdAt: DateTime.tryParse(j['created_at'] ?? '')?.toLocal() ?? DateTime.now(),
+    business: j['business'] != null ? Business.fromJson(j['business']) : null,
+    items: (j['items'] as List? ?? []).map((i) => OrderItem.fromJson(i)).toList(),
+    driverName: j['driver']?['name'],
+    driverPhone: j['driver']?['phone'],
+    driverVehicle: j['driver']?['vehicle'],
+    driverLat: _dn(j['driver_lat']),
+    driverLng: _dn(j['driver_lng']),
+    clientName: j['user']?['name'],
+    clientPhone: j['user']?['phone'],
+  );
 }

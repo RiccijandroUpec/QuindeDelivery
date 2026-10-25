@@ -9,6 +9,7 @@ import 'screens/client/client_shell.dart';
 import 'screens/driver/driver_shell.dart';
 import 'state/auth_state.dart';
 import 'state/cart_state.dart';
+import 'state/theme_state.dart';
 import 'theme.dart';
 import 'widgets/brand.dart';
 
@@ -20,6 +21,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthState()..init()),
         ChangeNotifierProvider(create: (_) => CartState()),
+        ChangeNotifierProvider(create: (_) => ThemeState()..init()),
       ],
       child: const DeliveryApp(),
     ),
@@ -31,10 +33,19 @@ class DeliveryApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mode = context.watch<ThemeState>().mode;
     return MaterialApp(
       title: 'Colibrí Delivery',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
+      darkTheme: buildTheme(Brightness.dark),
+      themeMode: mode,
+      // Los widgets leen AppColors directamente: se actualiza la paleta y se reconstruye todo al cambiar de tema.
+      builder: (context, child) {
+        final brightness = Theme.of(context).brightness;
+        AppColors.palette = AppPalette.of(brightness);
+        return KeyedSubtree(key: ValueKey(brightness), child: child!);
+      },
       locale: const Locale('es'),
       supportedLocales: const [Locale('es'), Locale('en')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
@@ -54,9 +65,7 @@ class AuthGate extends StatelessWidget {
     if (!auth.loggedIn) return const LoginScreen();
     final user = auth.user!;
     if (user.isBusiness) return BusinessShell(key: ValueKey('business-${user.id}'));
-    return user.isDriver
-        ? DriverShell(key: ValueKey('driver-${user.id}'))
-        : ClientShell(key: ValueKey('client-${user.id}'));
+    return user.isDriver ? DriverShell(key: ValueKey('driver-${user.id}')) : ClientShell(key: ValueKey('client-${user.id}'));
   }
 }
 
@@ -80,7 +89,7 @@ class SplashScreen extends StatelessWidget {
             width: 340,
             padding: const EdgeInsets.fromLTRB(28, 24, 28, 32),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.card,
               borderRadius: BorderRadius.circular(32),
               border: Border.all(color: AppColors.border),
               boxShadow: AppColors.softShadow,

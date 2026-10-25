@@ -59,7 +59,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.card,
       body: AuthLayout(
         title: 'Crea tu cuenta\nen segundos',
         showBack: true,
@@ -116,7 +116,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _password,
                 obscureText: true,
                 decoration: const InputDecoration(labelText: 'Contraseña', prefixIcon: Icon(Icons.lock_outline_rounded)),
-                validator: (v) => (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
+                validator: (v) => (v == null || v.length < 8) ? 'Mínimo 8 caracteres' : null,
               ),
               const SizedBox(height: 24),
               FilledButton(

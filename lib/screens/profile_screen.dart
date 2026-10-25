@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../state/auth_state.dart';
 import '../state/cart_state.dart';
+import '../state/theme_state.dart';
 import '../theme.dart';
 import '../widgets/brand.dart';
 
@@ -24,12 +25,22 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: name, decoration: const InputDecoration(labelText: 'Nombre')),
+            TextField(
+              controller: name,
+              decoration: const InputDecoration(labelText: 'Nombre'),
+            ),
             const SizedBox(height: 12),
-            TextField(controller: phone, decoration: const InputDecoration(labelText: 'Celular'), keyboardType: TextInputType.phone),
+            TextField(
+              controller: phone,
+              decoration: const InputDecoration(labelText: 'Celular'),
+              keyboardType: TextInputType.phone,
+            ),
             if (u.isDriver) ...[
               const SizedBox(height: 12),
-              TextField(controller: vehicle, decoration: const InputDecoration(labelText: 'Vehículo y placa')),
+              TextField(
+                controller: vehicle,
+                decoration: const InputDecoration(labelText: 'Vehículo y placa'),
+              ),
             ],
             const SizedBox(height: 16),
             FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Guardar')),
@@ -39,11 +50,7 @@ class ProfileScreen extends StatelessWidget {
     );
     if (ok != true) return;
     try {
-      await auth.updateProfile({
-        'name': name.text.trim(),
-        'phone': phone.text.trim(),
-        if (u.isDriver) 'vehicle': vehicle.text.trim(),
-      });
+      await auth.updateProfile({'name': name.text.trim(), 'phone': phone.text.trim(), if (u.isDriver) 'vehicle': vehicle.text.trim()});
       if (context.mounted) showMessage(context, 'Perfil actualizado', error: false);
     } catch (e) {
       if (context.mounted) showMessage(context, e);
@@ -71,22 +78,29 @@ class ProfileScreen extends StatelessWidget {
                     CircleAvatar(
                       radius: 34,
                       backgroundColor: Colors.white,
-                      child: Text(user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-                          style: t.headlineSmall?.copyWith(color: AppColors.primaryDark, fontWeight: FontWeight.w800)),
+                      child: Text(
+                        user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+                        style: t.headlineSmall?.copyWith(color: AppColors.primaryDark, fontWeight: FontWeight.w800),
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(user.name, style: t.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
+                          Text(
+                            user.name,
+                            style: t.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+                          ),
                           Text(user.email, style: t.bodySmall?.copyWith(color: Colors.white70)),
                           const SizedBox(height: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                             decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(20)),
-                            child: Text(user.roleLabel,
-                                style: t.labelSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
+                            child: Text(
+                              user.roleLabel,
+                              style: t.labelSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+                            ),
                           ),
                         ],
                       ),
@@ -115,6 +129,28 @@ class ProfileScreen extends StatelessWidget {
                       title: const Text('Vehículo'),
                       subtitle: Text(user.vehicle ?? '—'),
                     ),
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.dark_mode_outlined),
+                        const SizedBox(width: 16),
+                        const Expanded(child: Text('Tema')),
+                        SegmentedButton<ThemeMode>(
+                          showSelectedIcon: false,
+                          style: SegmentedButton.styleFrom(visualDensity: VisualDensity.compact),
+                          segments: const [
+                            ButtonSegment(value: ThemeMode.system, icon: Icon(Icons.brightness_auto_rounded, size: 18), tooltip: 'Sistema'),
+                            ButtonSegment(value: ThemeMode.light, icon: Icon(Icons.light_mode_rounded, size: 18), tooltip: 'Claro'),
+                            ButtonSegment(value: ThemeMode.dark, icon: Icon(Icons.dark_mode_rounded, size: 18), tooltip: 'Oscuro'),
+                          ],
+                          selected: {context.watch<ThemeState>().mode},
+                          onSelectionChanged: (s) => context.read<ThemeState>().setMode(s.first),
+                        ),
+                      ],
+                    ),
+                  ),
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.edit_outlined),

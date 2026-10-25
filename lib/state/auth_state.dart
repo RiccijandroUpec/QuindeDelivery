@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api.dart';
 import '../models.dart';
+import 'realtime.dart';
 
 class AuthState extends ChangeNotifier {
   User? user;
@@ -19,6 +20,7 @@ class AuthState extends ChangeNotifier {
     if (token != null && cached != null) {
       Api.instance.token = token;
       user = User.fromJson(jsonDecode(cached));
+      Realtime.instance.connect(token);
       // Refresca los datos en segundo plano; si el token ya no sirve, cierra sesión.
       Api.instance.get('/me').then((j) => _save(token, User.fromJson(j))).catchError((e) {
         if (e is ApiException && e.statusCode == 401) _clear();
@@ -55,6 +57,7 @@ class AuthState extends ChangeNotifier {
 
   Future<void> _save(String token, User u) async {
     Api.instance.token = token;
+    Realtime.instance.connect(token);
     user = u;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
@@ -64,6 +67,7 @@ class AuthState extends ChangeNotifier {
 
   Future<void> _clear() async {
     Api.instance.token = null;
+    Realtime.instance.disconnect();
     user = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../api.dart';
 import '../../models.dart';
 import '../../state/auth_state.dart';
+import '../../state/realtime.dart';
 import '../../theme.dart';
 import '../../widgets/brand.dart';
 
@@ -24,6 +25,7 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
   bool? _isOpen;
   int? _busy;
   Timer? _timer;
+  StreamSubscription<void>? _live;
   // Pedidos nuevos ya vistos, para avisar solo de los que llegan.
   final _seen = <int>{};
 
@@ -34,11 +36,17 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
     super.initState();
     _loadBusiness();
     _load();
-    _timer = Timer.periodic(const Duration(seconds: 8), (_) => _load());
+    // Tiempo real: cada cambio llega al instante. El polling queda de respaldo.
+    final businessId = context.read<AuthState>().user?.businessId;
+    if (businessId != null) {
+      _live = Realtime.instance.on('business.$businessId', 'order.changed').listen((_) => _load());
+    }
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) => _load());
   }
 
   @override
   void dispose() {
+    _live?.cancel();
     _timer?.cancel();
     super.dispose();
   }
@@ -63,8 +71,11 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
       });
       if (!firstLoad && incoming.isNotEmpty) {
         SystemSound.play(SystemSoundType.alert);
-        showMessage(context, incoming.length == 1 ? '¡Nuevo pedido #${incoming.first.id}!' : '¡${incoming.length} pedidos nuevos!',
-            error: false);
+        showMessage(
+          context,
+          incoming.length == 1 ? '¡Nuevo pedido #${incoming.first.id}!' : '¡${incoming.length} pedidos nuevos!',
+          error: false,
+        );
       }
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());
@@ -109,7 +120,10 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('¿Por qué rechazas el pedido #${o.id}?', style: Theme.of(c).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              Text(
+                '¿Por qué rechazas el pedido #${o.id}?',
+                style: Theme.of(c).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: 4),
               Text('El cliente verá este motivo.', style: Theme.of(c).textTheme.bodySmall?.copyWith(color: AppColors.muted)),
               const SizedBox(height: 12),
@@ -184,10 +198,14 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(user?.businessName ?? user?.name ?? '',
-                                  style: t.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
-                              Text(open ? 'Abierto · recibiendo pedidos' : 'Cerrado · no recibes pedidos nuevos',
-                                  style: t.bodySmall?.copyWith(color: Colors.white70)),
+                              Text(
+                                user?.businessName ?? user?.name ?? '',
+                                style: t.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+                              ),
+                              Text(
+                                open ? 'Abierto · recibiendo pedidos' : 'Cerrado · no recibes pedidos nuevos',
+                                style: t.bodySmall?.copyWith(color: Colors.white70),
+                              ),
                             ],
                           ),
                         ),
@@ -253,7 +271,10 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
 
     return Card(
       shape: o.status == 'pendiente'
-          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: AppColors.accent, width: 2))
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: AppColors.accent, width: 2),
+            )
           : null,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -270,10 +291,12 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
               ],
             ),
             const SizedBox(height: 4),
-            Row(children: [
-              Expanded(child: Text([o.clientName, o.clientPhone].whereType<String>().join(' · '), style: muted)),
-              CallButton(phone: o.clientPhone, tooltip: 'Llamar al cliente'),
-            ]),
+            Row(
+              children: [
+                Expanded(child: Text([o.clientName, o.clientPhone].whereType<String>().join(' · '), style: muted)),
+                CallButton(phone: o.clientPhone, tooltip: 'Llamar al cliente'),
+              ],
+            ),
             const Divider(height: 20),
             for (final i in o.items)
               Padding(
@@ -281,7 +304,10 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${i.quantity}x', style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary)),
+                    Text(
+                      '${i.quantity}x',
+                      style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary),
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
@@ -307,7 +333,11 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
             const Divider(height: 20),
             Row(
               children: [
-                Icon(o.paymentMethod == 'efectivo' ? Icons.payments_outlined : Icons.account_balance_outlined, size: 18, color: AppColors.muted),
+                Icon(
+                  o.paymentMethod == 'efectivo' ? Icons.payments_outlined : Icons.account_balance_outlined,
+                  size: 18,
+                  color: AppColors.muted,
+                ),
                 const SizedBox(width: 6),
                 Text(o.paymentMethod == 'efectivo' ? 'Efectivo' : 'Transferencia', style: muted),
                 if (o.isTransfer) ...[
@@ -315,10 +345,19 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
                   o.transferProofUrl != null
                       ? InkWell(
                           onTap: () => _showProof(o),
-                          child: Text('Ver comprobante',
-                              style: t.bodySmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700, decoration: TextDecoration.underline)),
+                          child: Text(
+                            'Ver comprobante',
+                            style: t.bodySmall?.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
                         )
-                      : Text('Sin comprobante aún', style: t.bodySmall?.copyWith(color: AppColors.accent, fontWeight: FontWeight.w700)),
+                      : Text(
+                          'Sin comprobante aún',
+                          style: t.bodySmall?.copyWith(color: AppColors.accent, fontWeight: FontWeight.w700),
+                        ),
                 ],
                 const Spacer(),
                 Text(money.format(o.subtotal), style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
@@ -326,16 +365,22 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
             ),
             if (o.driverName != null) ...[
               const SizedBox(height: 8),
-              Row(children: [
-                const Icon(Icons.two_wheeler_rounded, size: 18, color: AppColors.cyan),
-                const SizedBox(width: 6),
-                Expanded(child: Text('Repartidor: ${o.driverName}', style: t.bodySmall?.copyWith(color: AppColors.cyan))),
-                CallButton(phone: o.driverPhone, tooltip: 'Llamar al repartidor'),
-              ]),
+              Row(
+                children: [
+                  const Icon(Icons.two_wheeler_rounded, size: 18, color: AppColors.cyan),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text('Repartidor: ${o.driverName}', style: t.bodySmall?.copyWith(color: AppColors.cyan)),
+                  ),
+                  CallButton(phone: o.driverPhone, tooltip: 'Llamar al repartidor'),
+                ],
+              ),
             ],
             const SizedBox(height: 12),
             if (busy)
-              const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+              const Center(
+                child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()),
+              )
             else
               _actions(o),
           ],
@@ -355,8 +400,10 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
             InteractiveViewer(child: Image.network(o.transferProofUrl!, fit: BoxFit.contain)),
             Padding(
               padding: const EdgeInsets.all(12),
-              child: Text('Comprobante · pedido #${o.id} · ${money.format(o.total)}',
-                  style: Theme.of(c).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
+              child: Text(
+                'Comprobante · pedido #${o.id} · ${money.format(o.total)}',
+                style: Theme.of(c).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
             ),
           ],
         ),
@@ -369,41 +416,41 @@ class _BusinessOrdersScreenState extends State<BusinessOrdersScreen> {
     final disabled = _busy != null;
     return switch (o.status) {
       'pendiente' => Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: disabled ? null : () => _reject(o),
-                style: OutlinedButton.styleFrom(foregroundColor: Colors.red, minimumSize: size),
-                child: const Text('Rechazar'),
-              ),
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: disabled ? null : () => _reject(o),
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.red, minimumSize: size),
+              child: const Text('Rechazar'),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: FilledButton(
-                onPressed: disabled ? null : () => _setStatus(o, 'aceptado'),
-                style: FilledButton.styleFrom(minimumSize: size),
-                child: const Text('Aceptar pedido'),
-              ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: FilledButton(
+              onPressed: disabled ? null : () => _setStatus(o, 'aceptado'),
+              style: FilledButton.styleFrom(minimumSize: size),
+              child: const Text('Aceptar pedido'),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
       'aceptado' => FilledButton.icon(
-          onPressed: disabled ? null : () => _setStatus(o, 'preparando'),
-          style: FilledButton.styleFrom(minimumSize: size, backgroundColor: AppColors.cyan),
-          icon: const Icon(Icons.soup_kitchen_rounded),
-          label: const Text('Empezar a preparar'),
-        ),
+        onPressed: disabled ? null : () => _setStatus(o, 'preparando'),
+        style: FilledButton.styleFrom(minimumSize: size, backgroundColor: AppColors.cyan),
+        icon: const Icon(Icons.soup_kitchen_rounded),
+        label: const Text('Empezar a preparar'),
+      ),
       'preparando' => FilledButton.icon(
-          onPressed: disabled ? null : () => _setStatus(o, 'listo'),
-          style: FilledButton.styleFrom(minimumSize: size),
-          icon: const Icon(Icons.check_circle_rounded),
-          label: const Text('Marcar como listo'),
-        ),
+        onPressed: disabled ? null : () => _setStatus(o, 'listo'),
+        style: FilledButton.styleFrom(minimumSize: size),
+        icon: const Icon(Icons.check_circle_rounded),
+        label: const Text('Marcar como listo'),
+      ),
       _ => Text(
-          o.driverName != null ? 'Esperando que el repartidor lo recoja.' : 'Buscando repartidor…',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.muted),
-        ),
+        o.driverName != null ? 'Esperando que el repartidor lo recoja.' : 'Buscando repartidor…',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.muted),
+      ),
     };
   }
 }

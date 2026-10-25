@@ -43,7 +43,11 @@ class _DriverShellState extends State<DriverShell> {
         onDestinationSelected: _goTo,
         destinations: const [
           NavigationDestination(icon: Icon(Icons.radar_outlined), selectedIcon: Icon(Icons.radar_rounded), label: 'Disponibles'),
-          NavigationDestination(icon: Icon(Icons.two_wheeler_outlined), selectedIcon: Icon(Icons.two_wheeler_rounded), label: 'Mis entregas'),
+          NavigationDestination(
+            icon: Icon(Icons.two_wheeler_outlined),
+            selectedIcon: Icon(Icons.two_wheeler_rounded),
+            label: 'Mis entregas',
+          ),
           NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'Perfil'),
         ],
       ),

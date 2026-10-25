@@ -18,6 +18,7 @@ class BusinessHistoryScreen extends StatefulWidget {
 class BusinessHistoryScreenState extends State<BusinessHistoryScreen> {
   List<Order>? _orders;
   String? _error;
+  double _commissionRate = 0;
 
   @override
   void initState() {
@@ -27,7 +28,9 @@ class BusinessHistoryScreenState extends State<BusinessHistoryScreen> {
 
   Future<void> load() async {
     try {
-      final j = await Api.instance.get('/business/orders');
+      final results = await Future.wait([Api.instance.get('/business/orders'), Api.instance.get('/business')]);
+      final j = results.first;
+      _commissionRate = Business.fromJson(results.last).commissionRate;
       if (mounted) {
         setState(() {
           _orders = (j['data'] as List).map((o) => Order.fromJson(o)).toList();
@@ -51,11 +54,13 @@ class BusinessHistoryScreenState extends State<BusinessHistoryScreen> {
           controller: scroll,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           children: [
-            Row(children: [
-              Text('Pedido #${o.id}', style: Theme.of(c).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-              const Spacer(),
-              StatusChip(o.status),
-            ]),
+            Row(
+              children: [
+                Text('Pedido #${o.id}', style: Theme.of(c).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                const Spacer(),
+                StatusChip(o.status),
+              ],
+            ),
             if (o.status == 'cancelado' && (o.cancelReason?.isNotEmpty ?? false)) ...[
               const SizedBox(height: 8),
               Text('Motivo: ${o.cancelReason}', style: const TextStyle(color: Colors.red)),
@@ -75,6 +80,11 @@ class BusinessHistoryScreenState extends State<BusinessHistoryScreen> {
     final now = DateTime.now();
     final today = orders?.where((o) => DateUtils.isSameDay(o.createdAt, now) && o.status != 'cancelado').toList() ?? [];
     final sales = today.fold(0.0, (s, o) => s + o.subtotal);
+    // Semana actual (lunes a hoy), pedidos entregados.
+    final monday = DateUtils.dateOnly(now).subtract(Duration(days: now.weekday - 1));
+    final week = orders?.where((o) => o.status == 'entregado' && !o.createdAt.isBefore(monday)).toList() ?? [];
+    final weekSales = week.fold(0.0, (s, o) => s + o.subtotal);
+    final commission = weekSales * _commissionRate / 100;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Historial')),
@@ -82,16 +92,48 @@ class BusinessHistoryScreenState extends State<BusinessHistoryScreen> {
         onRefresh: load,
         child: orders == null
             ? (_error != null
-                ? ListView(children: [EmptyState(icon: Icons.wifi_off_rounded, title: 'Sin conexión', message: _error)])
-                : const BirdLoader())
+                  ? ListView(
+                      children: [EmptyState(icon: Icons.wifi_off_rounded, title: 'Sin conexión', message: _error)],
+                    )
+                  : const BirdLoader())
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  Row(children: [
-                    Expanded(child: _stat('Pedidos hoy', '${today.length}', Icons.receipt_long_rounded)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _stat('Ventas hoy', money.format(sales), Icons.attach_money_rounded)),
-                  ]),
+                  Row(
+                    children: [
+                      Expanded(child: _stat('Pedidos hoy', '${today.length}', Icons.receipt_long_rounded)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _stat('Ventas hoy', money.format(sales), Icons.attach_money_rounded)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.account_balance_wallet_rounded, color: AppColors.quinde),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Esta semana: ${money.format(weekSales)} en ventas',
+                                  style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                                Text(
+                                  'Comisión Colibrí (${_commissionRate.toStringAsFixed(0)}%): ${money.format(commission)} · '
+                                  'Neto: ${money.format(weekSales - commission)}',
+                                  style: t.bodySmall?.copyWith(color: AppColors.muted),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   if (orders.isEmpty)
                     const EmptyState(icon: Icons.history_rounded, title: 'Aún no tienes pedidos')

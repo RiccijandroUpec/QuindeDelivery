@@ -12,6 +12,11 @@ El backend (API + panel admin Filament) está en `C:\xampp\htdocs\delivery-api`.
    php artisan serve --host=0.0.0.0 --port=8000
    ```
    Panel admin: http://localhost:8000/admin
+   En otras dos terminales (tiempo real y pedidos vencidos):
+   ```
+   php artisan reverb:start --host=0.0.0.0 --port=8080
+   php artisan schedule:work
+   ```
 3. App:
    ```
    flutter run -d chrome

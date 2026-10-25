@@ -87,7 +87,7 @@ class _BusinessScreenState extends State<BusinessScreen> {
               child: CircleAvatar(
                 backgroundColor: Colors.white,
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink, size: 20),
+                  icon: Icon(Icons.arrow_back_rounded, color: AppColors.ink, size: 20),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -118,7 +118,11 @@ class _BusinessScreenState extends State<BusinessScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(14),
-                                child: SizedBox(width: 56, height: 56, child: PolyImage(url: b.logoUrl, seed: b.id + 1, iconSize: 26)),
+                                child: SizedBox(
+                                  width: 56,
+                                  height: 56,
+                                  child: PolyImage(url: b.logoUrl, seed: b.id + 1, iconSize: 26),
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -126,8 +130,7 @@ class _BusinessScreenState extends State<BusinessScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(b.name, style: t.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-                                    if (b.categoryName != null)
-                                      Text(b.categoryName!, style: t.bodySmall?.copyWith(color: AppColors.muted)),
+                                    if (b.categoryName != null) Text(b.categoryName!, style: t.bodySmall?.copyWith(color: AppColors.muted)),
                                   ],
                                 ),
                               ),
@@ -141,7 +144,12 @@ class _BusinessScreenState extends State<BusinessScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _info(Icons.star_rounded, b.rating.toStringAsFixed(1), b.ratingCount > 0 ? '${b.ratingCount} reseñas' : 'Calificación', AppColors.gold),
+                              _info(
+                                Icons.star_rounded,
+                                b.rating.toStringAsFixed(1),
+                                b.ratingCount > 0 ? '${b.ratingCount} reseñas' : 'Calificación',
+                                AppColors.gold,
+                              ),
                               _info(Icons.schedule_rounded, b.timeLabel, 'Entrega', AppColors.primary),
                               _info(Icons.two_wheeler_rounded, money.format(b.deliveryFee), 'Envío', AppColors.cyan),
                             ],
@@ -187,11 +195,13 @@ class _BusinessScreenState extends State<BusinessScreen> {
     final t = Theme.of(context).textTheme;
     return Column(
       children: [
-        Row(children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 4),
-          Text(value, style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-        ]),
+        Row(
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 4),
+            Text(value, style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          ],
+        ),
         Text(label, style: t.labelSmall?.copyWith(color: AppColors.muted)),
       ],
     );
@@ -224,10 +234,18 @@ class _ProductTile extends StatelessWidget {
                 Text(p.name, style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
                 if (p.description != null) ...[
                   const SizedBox(height: 2),
-                  Text(p.description!, maxLines: 2, overflow: TextOverflow.ellipsis, style: t.bodySmall?.copyWith(color: AppColors.muted)),
+                  Text(
+                    p.description!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: t.bodySmall?.copyWith(color: AppColors.muted),
+                  ),
                 ],
                 const SizedBox(height: 6),
-                Text(money.format(p.price), style: t.titleSmall?.copyWith(color: AppColors.primaryDark, fontWeight: FontWeight.w700)),
+                Text(
+                  money.format(p.price),
+                  style: t.titleSmall?.copyWith(color: AppColors.primaryDark, fontWeight: FontWeight.w700),
+                ),
               ],
             ),
           ),
@@ -238,7 +256,11 @@ class _ProductTile extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(14),
-                  child: SizedBox(width: 96, height: 72, child: PolyImage(url: p.imageUrl, seed: p.id, icon: Icons.fastfood_rounded, iconSize: 26)),
+                  child: SizedBox(
+                    width: 96,
+                    height: 72,
+                    child: PolyImage(url: p.imageUrl, seed: p.id, icon: Icons.fastfood_rounded, iconSize: 26),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 if (qty == 0)
@@ -251,7 +273,7 @@ class _ProductTile extends StatelessWidget {
                         minimumSize: Size.zero,
                         padding: EdgeInsets.zero,
                         foregroundColor: AppColors.primary,
-                        side: const BorderSide(color: AppColors.primary),
+                        side: BorderSide(color: AppColors.primary),
                       ),
                       child: const Text('Agregar', style: TextStyle(fontWeight: FontWeight.w600)),
                     ),
@@ -285,7 +307,11 @@ class QtyStepper extends StatelessWidget {
           _btn(qty == 1 ? Icons.delete_outline_rounded : Icons.remove_rounded, onMinus),
           SizedBox(
             width: 24,
-            child: Text('$qty', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+            child: Text(
+              '$qty',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            ),
           ),
           _btn(Icons.add_rounded, onPlus),
         ],
@@ -294,8 +320,8 @@ class QtyStepper extends StatelessWidget {
   }
 
   Widget _btn(IconData icon, VoidCallback onTap) => InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(width: 34, height: 34, child: Icon(icon, color: Colors.white, size: 18)),
-      );
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: SizedBox(width: 34, height: 34, child: Icon(icon, color: Colors.white, size: 18)),
+  );
 }

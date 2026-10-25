@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.card,
       body: AuthLayout(
         title: 'Lo que quieras,\nvolando a tu puerta',
         child: Form(
@@ -94,7 +94,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              Text('Cuentas de prueba', textAlign: TextAlign.center, style: t.labelSmall?.copyWith(color: AppColors.muted)),
+              Text(
+                'Cuentas de prueba',
+                textAlign: TextAlign.center,
+                style: t.labelSmall?.copyWith(color: AppColors.muted),
+              ),
               const SizedBox(height: 6),
               Wrap(
                 alignment: WrapAlignment.center,
@@ -136,73 +140,81 @@ class AuthLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    return LayoutBuilder(builder: (context, c) {
-      final headerH = (c.maxHeight * .36).clamp(240.0, 340.0);
-      return SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: c.maxHeight),
-          child: Stack(
-            children: [
-              SizedBox(
-                height: headerH + 40,
-                width: double.infinity,
-                child: PolyBackground(
-                  seed: 11,
-                  child: SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (showBack)
-                            IconButton.filledTonal(
-                              style: IconButton.styleFrom(backgroundColor: Colors.white24, foregroundColor: Colors.white),
-                              onPressed: () => Navigator.pop(context),
-                              icon: const Icon(Icons.arrow_back_rounded),
-                            ),
-                          const Spacer(),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Wordmark(light: true, logoSize: 44, showLogo: false),
-                                    const SizedBox(height: 10),
-                                    Text(title,
-                                        style: t.headlineSmall?.copyWith(
-                                            color: Colors.white, fontWeight: FontWeight.w800, height: 1.15, letterSpacing: -.5)),
-                                  ],
-                                ),
+    return LayoutBuilder(
+      builder: (context, c) {
+        final headerH = (c.maxHeight * .36).clamp(240.0, 340.0);
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: c.maxHeight),
+            child: Stack(
+              children: [
+                SizedBox(
+                  height: headerH + 40,
+                  width: double.infinity,
+                  child: PolyBackground(
+                    seed: 11,
+                    child: SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (showBack)
+                              IconButton.filledTonal(
+                                style: IconButton.styleFrom(backgroundColor: Colors.white24, foregroundColor: Colors.white),
+                                onPressed: () => Navigator.pop(context),
+                                icon: const Icon(Icons.arrow_back_rounded),
                               ),
-                              HoveringBird(size: (headerH * .34).clamp(80.0, 120.0)),
-                            ],
-                          ),
-                          const Spacer(),
-                        ],
+                            const Spacer(),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Wordmark(light: true, logoSize: 44, showLogo: false),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        title,
+                                        style: t.headlineSmall?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w800,
+                                          height: 1.15,
+                                          letterSpacing: -.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                HoveringBird(size: (headerH * .34).clamp(80.0, 120.0)),
+                              ],
+                            ),
+                            const Spacer(),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Container(
-                margin: EdgeInsets.only(top: headerH),
-                constraints: BoxConstraints(minHeight: c.maxHeight - headerH),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                Container(
+                  margin: EdgeInsets.only(top: headerH),
+                  constraints: BoxConstraints(minHeight: c.maxHeight - headerH),
+                  decoration: BoxDecoration(
+                    color: AppColors.card,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                  ),
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: Padding(padding: const EdgeInsets.fromLTRB(24, 28, 24, 24), child: child),
+                  ),
                 ),
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 460),
-                  child: Padding(padding: const EdgeInsets.fromLTRB(24, 28, 24, 24), child: child),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }

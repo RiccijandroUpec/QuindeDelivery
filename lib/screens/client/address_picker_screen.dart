@@ -96,7 +96,12 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                   child: Center(
                     child: Padding(
                       padding: EdgeInsets.only(bottom: 40),
-                      child: Icon(Icons.location_on_rounded, size: 48, color: AppColors.accent, shadows: [Shadow(blurRadius: 8, color: Colors.black38)]),
+                      child: Icon(
+                        Icons.location_on_rounded,
+                        size: 48,
+                        color: AppColors.accent,
+                        shadows: [Shadow(blurRadius: 8, color: Colors.black38)],
+                      ),
                     ),
                   ),
                 ),
@@ -108,14 +113,14 @@ class _AddressPickerScreenState extends State<AddressPickerScreen> {
                     onPressed: _locating ? null : _locate,
                     child: _locating
                         ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.my_location_rounded, color: AppColors.primary),
+                        : Icon(Icons.my_location_rounded, color: AppColors.primary),
                   ),
                 ),
               ],
             ),
           ),
           Material(
-            color: Colors.white,
+            color: AppColors.card,
             child: SafeArea(
               top: false,
               child: Form(

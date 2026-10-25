@@ -8,6 +8,7 @@ import '../../api.dart';
 import '../../models.dart';
 import '../../state/auth_state.dart';
 import '../../state/location_service.dart';
+import '../../state/realtime.dart';
 import '../../theme.dart';
 import '../../widgets/brand.dart';
 import 'driver_order_screen.dart';
@@ -25,6 +26,7 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
   List<Order>? _orders;
   String? _error;
   Timer? _timer;
+  StreamSubscription<void>? _live;
   int? _accepting;
   final _loc = LocationService.instance;
 
@@ -32,13 +34,17 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
   void initState() {
     super.initState();
     _load();
-    _timer = Timer.periodic(const Duration(seconds: 15), (_) {
+    _live = Realtime.instance.on('drivers', 'order.changed').listen((_) {
+      if (_loc.online.value) _load();
+    });
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (_loc.online.value) _load();
     });
   }
 
   @override
   void dispose() {
+    _live?.cancel();
     _timer?.cancel();
     super.dispose();
   }
@@ -108,9 +114,7 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
               SliverToBoxAdapter(
                 child: PolyBackground(
                   seed: online ? 31 : 32,
-                  colors: online
-                      ? AppColors.poly
-                      : const [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF475569), Color(0xFF64748B)],
+                  colors: online ? AppColors.poly : const [Color(0xFF1E293B), Color(0xFF334155), Color(0xFF475569), Color(0xFF64748B)],
                   child: SafeArea(
                     bottom: false,
                     child: Padding(
@@ -121,9 +125,14 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Hola, $name', style: t.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
-                                Text(online ? 'Estás en línea · compartiendo ubicación' : 'Estás desconectado',
-                                    style: t.bodySmall?.copyWith(color: Colors.white70)),
+                                Text(
+                                  'Hola, $name',
+                                  style: t.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+                                ),
+                                Text(
+                                  online ? 'Estás en línea · compartiendo ubicación' : 'Estás desconectado',
+                                  style: t.bodySmall?.copyWith(color: Colors.white70),
+                                ),
                               ],
                             ),
                           ),
@@ -199,7 +208,10 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
                 const SizedBox(width: 8),
                 StatusChip(o.status),
                 const Spacer(),
-                Text(money.format(o.deliveryFee), style: t.titleMedium?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800)),
+                Text(
+                  money.format(o.deliveryFee),
+                  style: t.titleMedium?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -212,10 +224,16 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(o.paymentMethod == 'efectivo' ? Icons.payments_outlined : Icons.account_balance_outlined, size: 18, color: AppColors.muted),
+                Icon(
+                  o.paymentMethod == 'efectivo' ? Icons.payments_outlined : Icons.account_balance_outlined,
+                  size: 18,
+                  color: AppColors.muted,
+                ),
                 const SizedBox(width: 6),
-                Text('${o.itemCount} productos · Cobrar ${money.format(o.paymentMethod == 'efectivo' ? o.total : 0)}',
-                    style: t.bodySmall?.copyWith(color: AppColors.muted)),
+                Text(
+                  '${o.itemCount} productos · Cobrar ${money.format(o.paymentMethod == 'efectivo' ? o.total : 0)}',
+                  style: t.bodySmall?.copyWith(color: AppColors.muted),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -236,7 +254,11 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
     final t = Theme.of(context).textTheme;
     return Row(
       children: [
-        CircleAvatar(radius: 16, backgroundColor: color, child: Icon(icon, size: 16, color: Colors.white)),
+        CircleAvatar(
+          radius: 16,
+          backgroundColor: color,
+          child: Icon(icon, size: 16, color: Colors.white),
+        ),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -247,7 +269,11 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
             ],
           ),
         ),
-        if (trailing != null) Text(trailing, style: t.labelMedium?.copyWith(color: AppColors.cyan, fontWeight: FontWeight.w700)),
+        if (trailing != null)
+          Text(
+            trailing,
+            style: t.labelMedium?.copyWith(color: AppColors.cyan, fontWeight: FontWeight.w700),
+          ),
       ],
     );
   }

@@ -51,16 +51,22 @@ class MyDeliveriesScreenState extends State<MyDeliveriesScreen> {
         onRefresh: load,
         child: orders == null
             ? (_error != null
-                ? ListView(children: [EmptyState(icon: Icons.wifi_off_rounded, title: 'Sin conexión', message: _error)])
-                : const BirdLoader())
+                  ? ListView(
+                      children: [EmptyState(icon: Icons.wifi_off_rounded, title: 'Sin conexión', message: _error)],
+                    )
+                  : const BirdLoader())
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  Row(children: [
-                    Expanded(child: _stat('Entregas', '${done.where((o) => o.status == 'entregado').length}', Icons.check_circle_rounded)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _stat('Ganado en envíos', money.format(earned), Icons.savings_rounded)),
-                  ]),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _stat('Entregas', '${done.where((o) => o.status == 'entregado').length}', Icons.check_circle_rounded),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: _stat('Ganado en envíos', money.format(earned), Icons.savings_rounded)),
+                    ],
+                  ),
                   _title('En curso'),
                   if (active.isEmpty)
                     Text('No tienes entregas activas.', style: TextStyle(color: AppColors.muted))
@@ -78,9 +84,9 @@ class MyDeliveriesScreenState extends State<MyDeliveriesScreen> {
   }
 
   Widget _title(String s) => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
-        child: Text(s, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-      );
+    padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+    child: Text(s, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+  );
 
   Widget _stat(String label, String value, IconData icon) {
     final t = Theme.of(context).textTheme;
@@ -96,7 +102,10 @@ class MyDeliveriesScreenState extends State<MyDeliveriesScreen> {
             children: [
               Icon(icon, color: Colors.white),
               const SizedBox(height: 8),
-              Text(value, style: t.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+              Text(
+                value,
+                style: t.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+              ),
               Text(label, style: t.bodySmall?.copyWith(color: Colors.white70)),
             ],
           ),
@@ -133,7 +142,10 @@ class MyDeliveriesScreenState extends State<MyDeliveriesScreen> {
             children: [
               StatusChip(o.status),
               const SizedBox(height: 4),
-              Text(money.format(o.deliveryFee), style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary)),
+              Text(
+                money.format(o.deliveryFee),
+                style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary),
+              ),
             ],
           ),
         ),

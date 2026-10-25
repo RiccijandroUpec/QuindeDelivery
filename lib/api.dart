@@ -21,30 +21,27 @@ class Api {
   String? token;
 
   Map<String, String> get _headers => {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        if (token != null) 'Authorization': 'Bearer $token',
-      };
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    if (token != null) 'Authorization': 'Bearer $token',
+  };
 
-  Future<dynamic> get(String path, [Map<String, String>? query]) =>
-      _send(() => http.get(_uri(path, query), headers: _headers));
+  Future<dynamic> get(String path, [Map<String, String>? query]) => _send(() => http.get(_uri(path, query), headers: _headers));
 
-  Future<dynamic> post(String path, [Object? body]) =>
-      _send(() => http.post(_uri(path), headers: _headers, body: jsonEncode(body ?? {})));
+  Future<dynamic> post(String path, [Object? body]) => _send(() => http.post(_uri(path), headers: _headers, body: jsonEncode(body ?? {})));
 
-  Future<dynamic> put(String path, [Object? body]) =>
-      _send(() => http.put(_uri(path), headers: _headers, body: jsonEncode(body ?? {})));
+  Future<dynamic> put(String path, [Object? body]) => _send(() => http.put(_uri(path), headers: _headers, body: jsonEncode(body ?? {})));
 
   Future<dynamic> patch(String path, [Object? body]) =>
       _send(() => http.patch(_uri(path), headers: _headers, body: jsonEncode(body ?? {})));
 
   /// Sube un archivo como multipart/form-data.
   Future<dynamic> upload(String path, String field, List<int> bytes, String filename) => _send(() async {
-        final req = http.MultipartRequest('POST', _uri(path))
-          ..headers.addAll({..._headers}..remove('Content-Type'))
-          ..files.add(http.MultipartFile.fromBytes(field, bytes, filename: filename));
-        return http.Response.fromStream(await req.send());
-      });
+    final req = http.MultipartRequest('POST', _uri(path))
+      ..headers.addAll({..._headers}..remove('Content-Type'))
+      ..files.add(http.MultipartFile.fromBytes(field, bytes, filename: filename));
+    return http.Response.fromStream(await req.send());
+  });
 
   Future<dynamic> delete(String path) => _send(() => http.delete(_uri(path), headers: _headers));
 

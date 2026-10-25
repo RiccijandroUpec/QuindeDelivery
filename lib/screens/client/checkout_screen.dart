@@ -23,6 +23,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String _payment = 'efectivo';
   final _cash = TextEditingController();
   final _notes = TextEditingController();
+  final _coupon = TextEditingController();
+  bool _checkingCoupon = false;
   bool _loadingAddresses = true;
   bool _sending = false;
 
@@ -54,6 +56,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
+  Future<void> _applyCoupon() async {
+    final cart = context.read<CartState>();
+    final code = _coupon.text.trim();
+    if (code.isEmpty) return;
+    setState(() => _checkingCoupon = true);
+    try {
+      final j = await Api.instance.post('/coupons/check', {'code': code, 'business_id': cart.business!.id, 'subtotal': cart.subtotal});
+      cart.applyCoupon(j['code'], j['description'], (j['discount'] as num).toDouble());
+      _coupon.clear();
+      if (mounted) showMessage(context, 'Cupón aplicado: -${money.format(cart.discount)}', error: false);
+    } catch (e) {
+      if (mounted) showMessage(context, e);
+    } finally {
+      if (mounted) setState(() => _checkingCoupon = false);
+    }
+  }
+
   Future<void> _placeOrder() async {
     final cart = context.read<CartState>();
     if (_address == null) {
@@ -76,6 +95,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         'payment_method': _payment,
         if (_payment == 'efectivo' && cash != null) 'cash_amount': cash,
         'notes': _notes.text.trim(),
+        if (cart.couponCode != null) 'coupon_code': cart.couponCode,
         'items': [
           for (final l in cart.lines) {'product_id': l.product.id, 'quantity': l.quantity},
         ],
@@ -145,7 +165,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
           _title('Entregar en'),
           if (_loadingAddresses)
-            const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
+            const Center(
+              child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()),
+            )
           else
             Card(
               child: RadioGroup<int>(
@@ -160,8 +182,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         subtitle: Text([a.address, if (a.reference?.isNotEmpty ?? false) a.reference].join(' · ')),
                       ),
                     ListTile(
-                      leading: const Icon(Icons.add_location_alt_outlined, color: AppColors.primary),
-                      title: const Text('Agregar dirección', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                      leading: Icon(Icons.add_location_alt_outlined, color: AppColors.primary),
+                      title: Text(
+                        'Agregar dirección',
+                        style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
+                      ),
                       onTap: _newAddress,
                     ),
                   ],
@@ -175,11 +200,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               onChanged: (v) => setState(() => _payment = v!),
               child: Column(
                 children: [
-                  const RadioListTile(
-                    value: 'efectivo',
-                    title: Text('Efectivo'),
-                    secondary: Icon(Icons.payments_outlined),
-                  ),
+                  const RadioListTile(value: 'efectivo', title: Text('Efectivo'), secondary: Icon(Icons.payments_outlined)),
                   if (_payment == 'efectivo')
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -204,6 +225,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             maxLines: 2,
             decoration: const InputDecoration(hintText: 'Ej: sin cebolla, tocar el timbre...'),
           ),
+          _title('Cupón'),
+          if (cart.couponCode != null)
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.local_offer_rounded, color: AppColors.accent),
+                title: Text(cart.couponCode!, style: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1)),
+                subtitle: Text(cart.couponDescription ?? 'Descuento aplicado'),
+                trailing: IconButton(onPressed: cart.removeCoupon, icon: const Icon(Icons.close_rounded), tooltip: 'Quitar'),
+              ),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _coupon,
+                    textCapitalization: TextCapitalization.characters,
+                    onSubmitted: (_) => _applyCoupon(),
+                    decoration: const InputDecoration(hintText: 'Código de descuento', prefixIcon: Icon(Icons.local_offer_outlined)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                FilledButton.tonal(
+                  onPressed: _checkingCoupon ? null : _applyCoupon,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(96, 56),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: _checkingCoupon
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Text('Aplicar'),
+                ),
+              ],
+            ),
           _title('Resumen'),
           Card(
             child: Padding(
@@ -213,6 +268,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   _row('Subtotal', money.format(cart.subtotal)),
                   const SizedBox(height: 6),
                   _row('Envío', money.format(cart.deliveryFee)),
+                  if (cart.discount > 0) ...[
+                    const SizedBox(height: 6),
+                    _row('Descuento', '-${money.format(cart.discount)}', style: t.bodyMedium?.copyWith(color: AppColors.accent)),
+                  ],
                   const Divider(height: 24),
                   _row('Total', money.format(cart.total), bold: true, style: t.titleMedium),
                 ],
@@ -225,12 +284,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _title(String s) => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
-        child: Text(s, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-      );
+    padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+    child: Text(s, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+  );
 
   Widget _row(String a, String b, {bool bold = false, TextStyle? style}) {
     final s = (style ?? Theme.of(context).textTheme.bodyMedium)?.copyWith(fontWeight: bold ? FontWeight.w700 : null);
-    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(a, style: s), Text(b, style: s)]);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(a, style: s),
+        Text(b, style: s),
+      ],
+    );
   }
 }
