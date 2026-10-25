@@ -40,22 +40,22 @@ class ProductionFeaturesTest extends TestCase
     public function test_new_drivers_wait_for_approval(): void
     {
         $this->postJson('/api/register', [
-            'name' => 'Nuevo', 'email' => 'nuevo@test.com', 'password' => '123456', 'role' => 'repartidor',
+            'name' => 'Nuevo', 'email' => 'nuevo@test.com', 'password' => '12345678', 'role' => 'repartidor',
         ])->assertCreated()->assertJsonPath('pending', true)->assertJsonMissingPath('token');
 
-        $this->postJson('/api/login', ['email' => 'nuevo@test.com', 'password' => '123456'])->assertUnprocessable();
+        $this->postJson('/api/login', ['email' => 'nuevo@test.com', 'password' => '12345678'])->assertUnprocessable();
 
         $driver = User::where('email', 'nuevo@test.com')->first();
         $this->actingAs($driver)->getJson('/api/driver/orders/available')->assertForbidden();
 
         $driver->update(['approved_at' => now()]);
-        $this->postJson('/api/login', ['email' => 'nuevo@test.com', 'password' => '123456'])->assertOk();
+        $this->postJson('/api/login', ['email' => 'nuevo@test.com', 'password' => '12345678'])->assertOk();
     }
 
     public function test_clients_register_without_approval(): void
     {
         $this->postJson('/api/register', [
-            'name' => 'Cliente', 'email' => 'c@test.com', 'password' => '123456',
+            'name' => 'Cliente', 'email' => 'c@test.com', 'password' => '12345678',
         ])->assertCreated()->assertJsonStructure(['token']);
     }
 
@@ -95,7 +95,7 @@ class ProductionFeaturesTest extends TestCase
 
     public function test_client_uploads_transfer_proof(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $order = $this->placeOrder('transferencia');
         $client = User::where('role', 'cliente')->first();
 
@@ -104,7 +104,7 @@ class ProductionFeaturesTest extends TestCase
         ], ['Accept' => 'application/json'])->assertOk();
 
         $this->assertNotNull($res->json('transfer_proof_url'));
-        Storage::disk('public')->assertExists($order->fresh()->transfer_proof);
+        Storage::disk('local')->assertExists($order->fresh()->transfer_proof);
 
         $owner = User::where('role', 'negocio')->first();
         $this->actingAs($owner)->getJson("/api/business/orders/{$order->id}")->assertJsonPath('transfer_proof_url', $res->json('transfer_proof_url'));

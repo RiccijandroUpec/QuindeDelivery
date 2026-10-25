@@ -55,8 +55,12 @@ class OrderInfolist
                         TextEntry::make('cash_amount')->label('Paga con')->money('USD')->placeholder('-'),
                         TextEntry::make('subtotal')->money('USD'),
                         TextEntry::make('delivery_fee')->label('Envío')->money('USD'),
+                        TextEntry::make('discount')->label('Descuento')->money('USD')
+                            ->helperText(fn (Order $record) => $record->coupon_code ? "Cupón {$record->coupon_code}" : null)
+                            ->visible(fn (Order $record) => $record->discount > 0),
                         TextEntry::make('total')->money('USD')->weight('bold'),
-                        ImageEntry::make('transfer_proof')->label('Comprobante')->disk('public')
+                        ImageEntry::make('transfer_proof_url')->label('Comprobante')
+                            ->url(fn (Order $record) => $record->transfer_proof_url, shouldOpenInNewTab: true)
                             ->visible(fn (Order $record) => $record->transfer_proof !== null),
                         TextEntry::make('rating')->label('Calificación')
                             ->formatStateUsing(fn ($state) => str_repeat('★', $state).str_repeat('☆', 5 - $state))

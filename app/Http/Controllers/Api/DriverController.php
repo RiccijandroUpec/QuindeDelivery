@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\DriverMoved;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -35,7 +36,13 @@ class DriverController extends Controller
     {
         $this->authorizeDriver($request, $order, allowUnassigned: true);
 
-        return OrderController::detail($order);
+        $detail = OrderController::detail($order);
+        // Antes de aceptar, el repartidor no ve el nombre ni el teléfono del cliente.
+        if ($order->driver_id === null) {
+            $detail->unsetRelation('user');
+        }
+
+        return $detail;
     }
 
     public function accept(Request $request, Order $order)
@@ -94,15 +101,20 @@ class DriverController extends Controller
             'lng' => ['required', 'numeric', 'between:-180,180'],
         ]);
 
-        $updated = $request->user()->deliveries()
+        $orders = $request->user()->deliveries()
             ->whereIn('status', ['aceptado', 'preparando', 'listo', 'en_camino'])
-            ->update([
-                'driver_lat' => $data['lat'],
-                'driver_lng' => $data['lng'],
-                'driver_location_at' => now(),
-            ]);
+            ->pluck('id');
 
-        return response()->json(['updated' => $updated]);
+        Order::whereIn('id', $orders)->update([
+            'driver_lat' => $data['lat'],
+            'driver_lng' => $data['lng'],
+            'driver_location_at' => now(),
+        ]);
+        foreach ($orders as $id) {
+            rescue(fn () => DriverMoved::dispatch($id, (float) $data['lat'], (float) $data['lng']), report: false);
+        }
+
+        return response()->json(['updated' => $orders->count()]);
     }
 
     private function authorizeDriver(Request $request, Order $order, bool $allowUnassigned = false): void

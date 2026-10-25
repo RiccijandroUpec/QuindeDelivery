@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Events\DriverMoved;
+use App\Events\OrderChanged;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class Order extends Model
 {
@@ -24,7 +26,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id', 'business_id', 'driver_id', 'status', 'address', 'reference', 'lat', 'lng',
-        'subtotal', 'delivery_fee', 'total', 'payment_method', 'cash_amount', 'transfer_proof', 'notes', 'cancel_reason', 'rating', 'rating_comment',
+        'subtotal', 'delivery_fee', 'coupon_code', 'discount', 'total', 'payment_method', 'cash_amount', 'transfer_proof', 'notes', 'cancel_reason', 'rating', 'rating_comment',
         'driver_lat', 'driver_lng', 'driver_location_at', 'delivered_at',
     ];
 
@@ -42,6 +44,7 @@ class Order extends Model
             'lng' => 'float',
             'subtotal' => 'float',
             'delivery_fee' => 'float',
+            'discount' => 'float',
             'total' => 'float',
             'cash_amount' => 'float',
             'driver_lat' => 'float',
@@ -52,9 +55,25 @@ class Order extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        // Avisos en tiempo real. Si el servidor de Reverb no está prendido, la app sigue funcionando con polling.
+        static::saved(function (Order $order) {
+            if ($order->wasRecentlyCreated || $order->wasChanged(['status', 'driver_id', 'transfer_proof'])) {
+                rescue(fn () => OrderChanged::dispatch($order), report: false);
+            }
+            if ($order->wasChanged(['driver_lat', 'driver_lng']) && $order->driver_lat !== null) {
+                rescue(fn () => DriverMoved::dispatch($order->id, $order->driver_lat, $order->driver_lng), report: false);
+            }
+        });
+    }
+
+    /** El comprobante es privado: se entrega con un enlace firmado que vence en 30 minutos. */
     public function getTransferProofUrlAttribute(): ?string
     {
-        return $this->transfer_proof ? Storage::disk('public')->url($this->transfer_proof) : null;
+        return $this->transfer_proof
+            ? URL::temporarySignedRoute('orders.proof', now()->addMinutes(30), ['order' => $this->id])
+            : null;
     }
 
     public function user(): BelongsTo

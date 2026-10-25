@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Business;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -36,19 +37,20 @@ class OrderController extends Controller
             'business_id' => ['required', 'exists:businesses,id'],
             'address' => ['required', 'string', 'max:255'],
             'reference' => ['nullable', 'string', 'max:255'],
-            'lat' => ['required', 'numeric'],
-            'lng' => ['required', 'numeric'],
+            'lat' => ['required', 'numeric', 'between:-90,90'],
+            'lng' => ['required', 'numeric', 'between:-180,180'],
             'payment_method' => ['required', Rule::in(['efectivo', 'transferencia'])],
-            'cash_amount' => ['nullable', 'numeric', 'min:0'],
+            'cash_amount' => ['nullable', 'numeric', 'min:0', 'max:10000'],
             'notes' => ['nullable', 'string', 'max:500'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer'],
+            'coupon_code' => ['nullable', 'string', 'max:40'],
+            'items' => ['required', 'array', 'min:1', 'max:50'],
+            'items.*.product_id' => ['required', 'integer', 'distinct'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
             'items.*.notes' => ['nullable', 'string', 'max:255'],
         ]);
 
         $business = Business::findOrFail($data['business_id']);
-        if (! $business->active || ! $business->is_open) {
+        if (! $business->isOpenNow()) {
             throw ValidationException::withMessages(['business_id' => ['El negocio está cerrado en este momento.']]);
         }
 
@@ -82,12 +84,21 @@ class OrderController extends Controller
             throw ValidationException::withMessages(['items' => ["El pedido mínimo es \${$business->min_order}."]]);
         }
 
-        $total = round($subtotal + $business->delivery_fee, 2);
+        $coupon = Coupon::findByCode($data['coupon_code'] ?? null);
+        if (filled($data['coupon_code'] ?? null)) {
+            $error = $coupon ? $coupon->rejectionFor($request->user(), $business, $subtotal) : 'Ese cupón no existe.';
+            if ($error) {
+                throw ValidationException::withMessages(['coupon_code' => [$error]]);
+            }
+        }
+        $discount = $coupon ? $coupon->discountFor($subtotal, $business->delivery_fee) : 0;
+
+        $total = round($subtotal + $business->delivery_fee - $discount, 2);
         if ($data['payment_method'] === 'efectivo' && isset($data['cash_amount']) && $data['cash_amount'] < $total) {
             throw ValidationException::withMessages(['cash_amount' => ['El monto en efectivo no cubre el total.']]);
         }
 
-        $order = DB::transaction(function () use ($request, $data, $business, $items, $subtotal, $total) {
+        $order = DB::transaction(function () use ($request, $data, $business, $items, $subtotal, $total, $coupon, $discount) {
             $order = Order::create([
                 'user_id' => $request->user()->id,
                 'business_id' => $business->id,
@@ -98,12 +109,17 @@ class OrderController extends Controller
                 'lng' => $data['lng'],
                 'subtotal' => $subtotal,
                 'delivery_fee' => $business->delivery_fee,
+                'coupon_code' => $coupon?->code,
+                'discount' => $discount,
                 'total' => $total,
                 'payment_method' => $data['payment_method'],
                 'cash_amount' => $data['cash_amount'] ?? null,
                 'notes' => $data['notes'] ?? null,
             ]);
             $order->items()->createMany($items);
+            if ($coupon && ! $coupon->claimUse()) {
+                throw ValidationException::withMessages(['coupon_code' => ['Este cupón ya alcanzó su límite de usos.']]);
+            }
 
             return $order;
         });
@@ -132,11 +148,21 @@ class OrderController extends Controller
         $request->validate(['proof' => ['required', 'image', 'max:5120']]);
 
         if ($order->transfer_proof) {
-            Storage::disk('public')->delete($order->transfer_proof);
+            Storage::disk('local')->delete($order->transfer_proof);
         }
-        $order->update(['transfer_proof' => $request->file('proof')->store('proofs', 'public')]);
+        // Disco privado: no se puede abrir sin el enlace firmado.
+        $order->update(['transfer_proof' => $request->file('proof')->store('proofs', 'local')]);
 
         return $this->detail($order);
+    }
+
+    public function showProof(Order $order)
+    {
+        abort_unless($order->transfer_proof, 404);
+        // Los comprobantes antiguos estaban en el disco público.
+        $disk = Storage::disk('local')->exists($order->transfer_proof) ? 'local' : 'public';
+
+        return Storage::disk($disk)->response($order->transfer_proof);
     }
 
     public function rate(Request $request, Order $order)

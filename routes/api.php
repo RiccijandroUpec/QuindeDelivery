@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BusinessController;
 use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\DriverController;
 use App\Http\Controllers\Api\OrderController;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,9 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 });
+
+// Comprobantes de transferencia: solo con enlace firmado (ver Order::getTransferProofUrlAttribute).
+Route::get('/proofs/{order}', [OrderController::class, 'showProof'])->middleware('signed')->name('orders.proof');
 
 Route::get('/categories', [CatalogController::class, 'categories']);
 Route::get('/businesses', [CatalogController::class, 'businesses']);
@@ -26,7 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:cliente')->group(function () {
         Route::apiResource('addresses', AddressController::class)->except('show');
         Route::get('/orders', [OrderController::class, 'index']);
-        Route::post('/orders', [OrderController::class, 'store']);
+        Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:10,1');
+        Route::post('/coupons/check', [CouponController::class, 'check'])->middleware('throttle:20,1');
         Route::get('/orders/{order}', [OrderController::class, 'show']);
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
         Route::post('/orders/{order}/proof', [OrderController::class, 'uploadProof']);
@@ -50,5 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/orders/{order}/status', [BusinessController::class, 'updateStatus']);
         Route::get('/products', [BusinessController::class, 'products']);
         Route::patch('/products/{product}', [BusinessController::class, 'updateProduct']);
+        Route::post('/products/{product}/image', [BusinessController::class, 'uploadProductImage']);
+        Route::put('/hours', [BusinessController::class, 'updateHours']);
     });
 });

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Business;
 use App\Models\Category;
+use App\Models\Coupon;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -100,6 +101,10 @@ class DatabaseSeeder extends Seeder
                 }
             }
         }
+
+        Coupon::create(['code' => 'PRIMERA20', 'description' => '20% en tu primer pedido', 'type' => 'percent', 'value' => 20, 'max_discount' => 5, 'first_order_only' => true]);
+        Coupon::create(['code' => 'ENVIOGRATIS', 'description' => 'Envío gratis desde $10', 'type' => 'free_delivery', 'min_order' => 10]);
+        Coupon::create(['code' => 'COLIBRI2', 'description' => '$2 de descuento', 'type' => 'fixed', 'value' => 2, 'min_order' => 8, 'max_uses' => 100]);
 
         User::create([
             'name' => 'Sabor Serrano', 'email' => 'negocio@delivery.test', 'password' => '123456',

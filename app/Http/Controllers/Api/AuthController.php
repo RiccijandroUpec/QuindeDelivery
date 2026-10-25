@@ -17,7 +17,7 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'password' => ['required', 'string', 'min:6'],
+            'password' => ['required', 'string', 'min:8', 'max:100'],
             'role' => ['nullable', Rule::in(['cliente', 'repartidor'])],
             'vehicle' => ['nullable', 'string', 'max:50'],
         ]);

@@ -29,7 +29,21 @@ class DeliveryStats extends StatsOverviewWidget
                 ->color('warning'),
             Stat::make('En camino', Order::where('status', 'en_camino')->count())
                 ->description(User::where('role', 'repartidor')->where('active', true)->count().' repartidores activos'),
-            Stat::make('Negocios abiertos', Business::where('active', true)->where('is_open', true)->count()),
+            Stat::make('Negocios abiertos', Business::where('active', true)->get()->filter->isOpenNow()->count()),
+            Stat::make('Entrega promedio', $this->averageDeliveryMinutes().' min')
+                ->description('Desde el pedido hasta la puerta (7 días)')
+                ->color('info'),
         ];
+    }
+
+    private function averageDeliveryMinutes(): int
+    {
+        $minutes = Order::where('status', 'entregado')
+            ->whereNotNull('delivered_at')
+            ->where('created_at', '>=', today()->subDays(6))
+            ->get(['created_at', 'delivered_at'])
+            ->map(fn (Order $o) => $o->created_at->diffInMinutes($o->delivered_at));
+
+        return (int) round($minutes->avg() ?? 0);
     }
 }

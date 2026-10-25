@@ -6,6 +6,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -70,6 +71,7 @@ class BusinessForm
                             ->prefix('$')
                             ->default(1.5)
                             ->required(),
+                        TextInput::make('commission_rate')->label('Comisión de la plataforma')->numeric()->suffix('%')->default(10)->minValue(0)->maxValue(100),
                         TextInput::make('min_order')
                             ->label('Pedido mínimo')
                             ->numeric()
@@ -93,6 +95,8 @@ class BusinessForm
                 Section::make('Estado')
                     ->columnSpan(1)
                     ->schema([
+                        TimePicker::make('opens_at')->label('Abre a las')->seconds(false),
+                        TimePicker::make('closes_at')->label('Cierra a las')->seconds(false)->helperText('Vacío = sin horario fijo.'),
                         Toggle::make('is_open')->label('Abierto ahora')->default(true),
                         Toggle::make('featured')->label('Destacado'),
                         Toggle::make('active')->label('Activo')->default(true),

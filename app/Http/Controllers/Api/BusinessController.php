@@ -7,6 +7,7 @@ use App\Models\Business;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -93,6 +94,31 @@ class BusinessController extends Controller
         ]));
 
         return $product;
+    }
+
+    public function uploadProductImage(Request $request, Product $product)
+    {
+        abort_unless($product->business_id === $this->business($request)->id, 403);
+        $request->validate(['image' => ['required', 'image', 'max:4096']]);
+
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+        $product->update(['image' => $request->file('image')->store('products', 'public')]);
+
+        return $product;
+    }
+
+    public function updateHours(Request $request)
+    {
+        $data = $request->validate([
+            'opens_at' => ['nullable', 'date_format:H:i', 'required_with:closes_at'],
+            'closes_at' => ['nullable', 'date_format:H:i', 'required_with:opens_at', 'different:opens_at'],
+        ]);
+        $business = $this->business($request);
+        $business->update($data);
+
+        return $business;
     }
 
     private function business(Request $request): Business
