@@ -79,7 +79,7 @@ class PlatformRevenueTest extends TestCase
         Business::first()->update(['commission_rate' => 10, 'delivery_fee' => 2]);
 
         $a = $this->placeOrder();
-        $b = $this->placeOrder(['coupon_code' => 'COLIBRI2']);
+        $b = $this->placeOrder(['coupon_code' => 'QUINDE2']);
         Order::whereKey([$a->id, $b->id])->update(['status' => 'entregado', 'delivered_at' => now()]);
 
         $r = PlatformRevenue::totals(Order::where('status', 'entregado'));

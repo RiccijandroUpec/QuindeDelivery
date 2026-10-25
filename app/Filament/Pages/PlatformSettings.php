@@ -17,7 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use UnitEnum;
 
-/** Tarifas de la plataforma: lo que gana Colibrí en cada pedido. */
+/** Tarifas de la plataforma: lo que gana Quinde en cada pedido. */
 class PlatformSettings extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;

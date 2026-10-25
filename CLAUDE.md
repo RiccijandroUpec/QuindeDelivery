@@ -1,4 +1,4 @@
-# Colibrí Delivery – API + Panel admin
+# Quinde Delivery – API + Panel admin
 
 Laravel 12 + Filament 5 + Sanctum, MySQL (XAMPP, BD `delivery`).
 App Flutter que la consume: `C:\Users\richa\StudioProjects\Delivery`.
@@ -18,7 +18,7 @@ App Flutter que la consume: `C:\Users\richa\StudioProjects\Delivery`.
 - `app/Http/Middleware/EnsureRole.php` – alias `role:` (registrado en `bootstrap/app.php`)
 - `app/Models/` – User, Business, Category, Product, Address, Order, OrderItem
 - `app/Filament/Resources/` – Businesses, Categories, Products, Orders, Users
-- `database/seeders/DatabaseSeeder.php` – datos, cuentas y cupones de prueba (PRIMERA20, ENVIOGRATIS, COLIBRI2)
+- `database/seeders/DatabaseSeeder.php` – datos, cuentas y cupones de prueba (PRIMERA20, ENVIOGRATIS, QUINDE2)
 - `app/Events/` – `OrderChanged` (canales `orders.{id}`, `business.{id}`, `drivers`) y `DriverMoved` (`orders.{id}`); se disparan desde `Order::booted()` con `rescue()` para no fallar si Reverb está apagado
 - `routes/channels.php` – permisos de canales privados; auth en `POST /api/broadcasting/auth` con token Sanctum
 - `app/Filament/Widgets/` – métricas del dashboard; `app/Filament/Pages/Settlements.php` + `app/Filament/Settlements/` – liquidaciones (comisiones y ganancias)

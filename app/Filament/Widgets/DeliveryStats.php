@@ -25,7 +25,7 @@ class DeliveryStats extends StatsOverviewWidget
                 ->color('primary'),
             Stat::make('Ventas hoy', '$'.number_format((clone $today)->where('status', 'entregado')->sum('total'), 2))
                 ->color('success'),
-            Stat::make('Ganancia Colibrí hoy', '$'.number_format(PlatformRevenue::totals((clone $today)->where('status', 'entregado'))['net'], 2))
+            Stat::make('Ganancia Quinde hoy', '$'.number_format(PlatformRevenue::totals((clone $today)->where('status', 'entregado'))['net'], 2))
                 ->description('Comisiones, servicio y envíos')
                 ->color('success'),
             Stat::make('Pendientes', Order::where('status', 'pendiente')->count())

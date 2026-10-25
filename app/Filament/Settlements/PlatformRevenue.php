@@ -9,7 +9,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 /** Ganancia de la plataforma: comisiones + tarifa de servicio + parte del envío − descuentos. */
 class PlatformRevenue extends StatsOverviewWidget
 {
-    protected ?string $heading = 'Ganancia de Colibrí';
+    protected ?string $heading = 'Ganancia de Quinde';
 
     protected function getStats(): array
     {

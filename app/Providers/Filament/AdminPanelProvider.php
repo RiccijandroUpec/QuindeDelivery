@@ -27,7 +27,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('Colibrí Delivery')
+            ->brandName('Quinde Delivery')
             ->brandLogo(asset('images/logo-full.svg'))
             ->darkModeBrandLogo(asset('images/logo-full-dark.svg'))
             ->brandLogoHeight('2.6rem')
