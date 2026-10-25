@@ -1,7 +1,7 @@
 # Quinde Delivery – API + Panel admin
 
 Laravel 12 + Filament 5 + Sanctum, MySQL (XAMPP, BD `delivery`).
-App Flutter que la consume: `C:\Users\richa\StudioProjects\Delivery`.
+App Flutter que la consume: `../app`.
 
 ## Comandos
 - Server: `php artisan serve --host=0.0.0.0 --port=8000`

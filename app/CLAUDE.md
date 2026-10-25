@@ -1,7 +1,7 @@
 # Quinde Delivery – App Flutter
 
 App de delivery multi-negocio, una sola app con tres roles: **cliente**, **repartidor** y **negocio**.
-Backend Laravel en `C:\xampp\htdocs\delivery-api` (tiene su propio CLAUDE.md).
+Backend Laravel en `../api` (tiene su propio CLAUDE.md).
 
 ## Comandos
 - Correr: `flutter run -d chrome` (o `-d <dispositivo>`)
